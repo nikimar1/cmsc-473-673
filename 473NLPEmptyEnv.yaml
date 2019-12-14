@@ -1,0 +1,10 @@
+name: 473NLPEmptyEnv
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - pandas
+  - conllu
+  - scipy
+  - matplotlib
+  - scikit-learn
