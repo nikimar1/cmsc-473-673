@@ -548,35 +548,37 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTuneLang1, pathToTun
 	print("F1Score is:")
 	print(f1Score)
 
-	#calculate most common baseline
-	baselineprobLang1 = len(sentenceList1) / (len(sentenceList1) + len(sentenceList2))
-	baselineprobLang2 = len(sentenceList2) / (len(sentenceList1) + len(sentenceList2))
+    #####commenting this out because it was just a baseline that I am comparing my method to to showcase that laplace wasn't working well. this was for assn3. 
+    #####I have some ideas how to fix my poor performance in code above though. I will make changes later
+	#####calculate most common baseline
+	####baselineprobLang1 = len(sentenceList1) / (len(sentenceList1) + len(sentenceList2))
+	####baselineprobLang2 = len(sentenceList2) / (len(sentenceList1) + len(sentenceList2))
 	
-	baselines = []
-	if baselineprobLang2 > baselineprobLang1:
-		for i in range (len(actualLang)):
-			baselines.append ('Lang2')
-	else:
-		for i in range(len(actualLang)):
-			baselines.append ('Lang1')
+	####baselines = []
+	####if baselineprobLang2 > baselineprobLang1:
+	####	for i in range (len(actualLang)):
+	####		baselines.append ('Lang2')
+	####else:
+	####	for i in range(len(actualLang)):
+	####		baselines.append ('Lang1')
 
-	#note that this baseline returns a warning because I never predict one of the two classes in this baseline sample
-	#the warning can be ignored
-	precisionbase = precision_score(actualLang, baselines,average = "macro")
+	#####note that this baseline returns a warning because I never predict one of the two classes in this baseline sample
+	#####the warning can be ignored
+	####precisionbase = precision_score(actualLang, baselines,average = "macro")
 	
-	recallbase = recall_score(actualLang, baselines,average = "macro")
+	####recallbase = recall_score(actualLang, baselines,average = "macro")
 	
-	print("\nFollowing is for baseline:")
+	####print("\nFollowing is for baseline:")
 	
-	print("\nPrecision is:")
-	print(precisionbase)
+	####print("\nPrecision is:")
+	####print(precisionbase)
 	
-	print("Recall is:")
-	print(recallbase)
+	####print("Recall is:")
+	####print(recallbase)
 
-	f1Scorebase = (2*precisionbase*recallbase)/(precisionbase+recallbase)
-	print("F1Score is:")
-	print(f1Scorebase)
+	####f1Scorebase = (2*precisionbase*recallbase)/(precisionbase+recallbase)
+	####print("F1Score is:")
+	####print(f1Scorebase)
 	
     ###########change up how serialization works to make up for changes to my code above
     ########### commenting out for now
