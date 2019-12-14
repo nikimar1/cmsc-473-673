@@ -251,8 +251,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTuneLang1, pathToTun
 	bigramLaplaceFrame2 = bigramLaplaceFrame2.astype(np.float32)
 
 	#for debugging purposes printing bigram. 
-	print(bigramLaplaceFrame1)
-	print(bigramLaplaceFrame2)
+	#print(bigramLaplaceFrame1)
+	#print(bigramLaplaceFrame2)
 
 	#Now train model by going over all sentences and classifying them using markov chain bigram probability products to get estimated p(sentence)
 	#Then calculate probability using posterior and prior probability. Iterate this process for all sentences in both languages to train the predictor. 
@@ -382,6 +382,13 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTuneLang1, pathToTun
 	print("Final trained probability of the second language passed to this program:")
 	print(probLang2)
 
+    ##########
+	####change code for final project. don't use pandas 2 dimensional dataframe. 
+	####instead keeping dictionaries but using laplace constant for probabilities that are 0
+	####change this to add log sums instead. also change how it counts unknown vocab. 
+	####count it as 0+laplace. calculate normalizing z in the end as well
+	##########
+
 	#Code for checking results in dev set to be used for tuning hyperparamters
 	#This dev run will not tweak trained probabilities. it will merely evaluate them
 
@@ -429,25 +436,25 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTuneLang1, pathToTun
 		tempBigram2 = zip(tempSentence2, islice(tempSentence2, 1, None))
 		#iterating over created list of bigrams and adding new ones to the dictionary while incrementing counts for existing bigrams 
 		for wordPair in tempBigram1 :
-			probSentenceGivenL1*=(bigramLaplaceFrame1.loc[wordPair[0], wordPair[1]])
+			probSentenceGivenL1+=(math.log(bigramLaplaceFrame1.loc[wordPair[0], wordPair[1]]))
 		for wordPair in tempBigram2 :
-			probSentenceGivenL2*=(bigramLaplaceFrame2.loc[wordPair[0], wordPair[1]])
+			probSentenceGivenL2+=(math.log(bigramLaplaceFrame2.loc[wordPair[0], wordPair[1]]))
 			
 		#In some cases that probability multiplication markov chain gets below the threshold where floats can be represented and becomes 0.
 		#In those cases, p(sentence|l) will be set to almost the smallest representable python decimal	
-		if probSentenceGivenL1 == 0:
-			probSentenceGivenL1 = (2**-126)
-		if probSentenceGivenL2 == 0:
-			probSentenceGivenL2 = (2**-126)
+		#if probSentenceGivenL1 == 0:
+		#	probSentenceGivenL1 = (2**-126)
+		#if probSentenceGivenL2 == 0:
+		#	probSentenceGivenL2 = (2**-126)
 		
-		if probLang1 == 0:
-			probLang1 = (2**-126)
-		if probLang2 == 0:
-			probLang2 = (2**-126)
+		#if probLang1 == 0:
+		#	probLang1 = (2**-126)
+		#if probLang2 == 0:
+		#	probLang2 = (2**-126)
 		
 		#predict which language it is using logs
-		logProb1 = math.log(probSentenceGivenL1) + math.log(probLang1)
-		logProb2 = math.log(probSentenceGivenL2) + math.log(probLang2)
+		logProb1 = probSentenceGivenL1 + math.log(probLang1)
+		logProb2 = probSentenceGivenL2 + math.log(probLang2)
 		
 		if(logProb1 < logProb2):
 			predictedLang.append('Lang2')
@@ -495,16 +502,16 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTuneLang1, pathToTun
 		####change code for final project. don't use pandas 2 dimensional dataframe. 
 		####instead keeping dictionaries but using laplace constant for probabilities that are 0
 		####change this to add log sums instead. also change how it counts unknown vocab. 
-		####count it at 0. calculate normalizing z in the end as well
+		####count it as 0 + laplace. calculate normalizing z in the end as well
 		##########
 		
 		tempBigram1 = zip(tempSentence1, islice(tempSentence1, 1, None))
 		tempBigram2 = zip(tempSentence2, islice(tempSentence2, 1, None))
 		#iterating over created list of bigrams and adding new ones to the dictionary while incrementing counts for existing bigrams 
 		for wordPair in tempBigram1 :
-			probSentenceGivenL1*=(bigramLaplaceFrame1.loc[wordPair[0], wordPair[1]])
+			probSentenceGivenL1+=(math.log(bigramLaplaceFrame1.loc[wordPair[0], wordPair[1]]))
 		for wordPair in tempBigram2 :
-			probSentenceGivenL2*=(bigramLaplaceFrame2.loc[wordPair[0], wordPair[1]])
+			probSentenceGivenL2+=(math.log(bigramLaplaceFrame2.loc[wordPair[0], wordPair[1]]))
 		
 		############commented out because I am now adding logarithms instead
 		#In some cases that probability multiplication markov chain gets below the threshold where floats can be represented and becomes 0.
@@ -515,8 +522,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTuneLang1, pathToTun
 		#	probSentenceGivenL2 = (2**-126)
 		
 		#predict which language it is using logs
-		logProb1 = math.log(probSentenceGivenL1) + math.log(probLang1)
-		logProb2 = math.log(probSentenceGivenL2) + math.log(probLang2)
+		logProb1 = probSentenceGivenL1 + math.log(probLang1)
+		logProb2 = probSentenceGivenL2 + math.log(probLang2)
 		
 		if(logProb1 < logProb2):
 			predictedLang.append('Lang2')
