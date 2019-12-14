@@ -580,32 +580,32 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTuneLang1, pathToTun
 	
     ###########change up how serialization works to make up for changes to my code above
     ########### commenting out for now
-    """
-	#allow option to not serialize. If path with ignore case is equal to the string none, skip serialization.
-	if not (str(pathToSerialize).lower()=='none'):
-		#now serialize my model
-		#I am passing along features needed to recreate my data structures as opposed to passing all of my data structures.
+    
+	#####allow option to not serialize. If path with ignore case is equal to the string none, skip serialization.
+	####if not (str(pathToSerialize).lower()=='none'):
+	####now serialize my model
+	#####I am passing along features needed to recreate my data structures as opposed to passing all of my data structures.
 		
-		#In hindsight this is a mome memory efficient but sometimes less runtime efficient method for creating models and deserializing models.
-		#In cases like katz backoff where my files were almost 700 mb, this might have been useful as the files were a tad bit big. I did somewhat use this for katz 
-		#but could have saved more space. On the other hand my deserialization runtime is very quick for katz which is nice. It is a tradeoff. 
-		
-		#Create inner container dataframe.
-		tempDf = pd.DataFrame(index =['Container'], columns = [0,1,2,3,4,5,6,7,8] )
-		#lists of word counts
-		tempDf.iat[0,0] = filteredList1
-		tempDf.iat[0,1] = filteredList2
-		tempDf.iat[0,2] = laplace
-		tempDf.iat[0,3] = bigramCounts1
-		tempDf.iat[0,4]= bigramCounts2
-		tempDf.iat[0,5] = probLang1
-		tempDf.iat[0,6] = probLang2
-		tempDf.iat[0,7] = sentenceList1
-		tempDf.iat[0,8] = sentenceList2
+	#####In hindsight this is a mome memory efficient but sometimes less runtime efficient method for creating models and deserializing models.
+	#####In cases like katz backoff where my files were almost 700 mb, this might have been useful as the files were a tad bit big. I did somewhat use this for katz 
+	#####but could have saved more space. On the other hand my deserialization runtime is very quick for katz which is nice. It is a tradeoff. 
+	
+	#####Create inner container dataframe.
+	####tempDf = pd.DataFrame(index =['Container'], columns = [0,1,2,3,4,5,6,7,8] )
+	#####lists of word counts
+	####tempDf.iat[0,0] = filteredList1
+	####tempDf.iat[0,1] = filteredList2
+	####tempDf.iat[0,2] = laplace
+	####tempDf.iat[0,3] = bigramCounts1
+	####tempDf.iat[0,4]= bigramCounts2
+	####tempDf.iat[0,5] = probLang1
+	####tempDf.iat[0,6] = probLang2
+	####tempDf.iat[0,7] = sentenceList1
+	####tempDf.iat[0,8] = sentenceList2
 
-		#serialize via pickle
-		tempDf.to_pickle(pathToSerialize)
-    """
+    #####serialize via pickle
+	####tempDf.to_pickle(pathToSerialize)
+    
 #check if correct number of arguments 
 if (len(sys.argv) <7  ) :
 	print("Incorrect number of arguments for the script")

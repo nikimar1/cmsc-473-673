@@ -9,5 +9,5 @@
 
 To train evaluate on dev, serialize, and set oov cutoff point to 1 and laplace constant to .1:
 
-python "question7.py" ./fr_gsd-ud-train.conllu ./en_ewt-ud-train.conllu ./fr_gsd-ud-test.conllu ./en_ewt-ud-test.conllu usedtobeforserializationbutcommentedout  1 .1
+python "laplaceNoisyChannel.py" ./fr_gsd-ud-train.conllu ./en_ewt-ud-train.conllu ./fr_gsd-ud-test.conllu ./en_ewt-ud-test.conllu usedtobeforserializationbutcommentedout  1 .1
 
