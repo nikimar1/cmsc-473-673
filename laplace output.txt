@@ -1,0 +1,16 @@
+Initial probability of the first language passed to this program:
+0.5371074288666642
+Initial probability of the second language passed to this program:
+0.4628925711333358
+
+Final trained probability of the first language passed to this program:
+0.5371074288666688
+Final trained probability of the second language passed to this program:
+0.4628925711333312
+
+Precision is:
+0.9360587002096437
+Recall is:
+0.9853153586904189
+F1Score is:
+0.9600556535881961
