@@ -4,16 +4,9 @@
 #### conda env create --file 473NLPEmptyEnv.yaml
 #### conda activate 473NLPEmptyEnv
 
-### For question 7, run commands as in the following example:
-##### Note, it is using a french and english training set
-
-To train on train and evaluate on test with laplace constant of .1:
-
-python "laplaceNoisyChannel.py" ./fr_gsd-ud-train.conllu ./en_ewt-ud-train.conllu ./fr_gsd-ud-test.conllu ./en_ewt-ud-test.conllu .1
-
-## This is now using all 6 LANGUAGES in the following order: 
-## Lang1 is French, Lang2 is English, Lang3 is German
-## Lang 4 is Spanish, Lang 5 is Italian, Lang 6 is Dutch
+## This is now using all 6 Languages in the following order: 
+#### Lang1 is French, Lang2 is English, Lang3 is German
+#### Lang 4 is Spanish, Lang 5 is Italian, Lang 6 is Dutch
 
 To train on train with training set and evaluate on dev with laplace constant of .1:
 
