@@ -7,7 +7,17 @@
 ### For question 7, run commands as in the following example:
 ##### Note, it is using a french and english training set
 
-To train evaluate on dev, serialize, and set oov cutoff point to 1 and laplace constant to .1:
+To train on train and evaluate on test with laplace constant of .1:
 
-python "laplaceNoisyChannel.py" ./fr_gsd-ud-train.conllu ./en_ewt-ud-train.conllu ./fr_gsd-ud-test.conllu ./en_ewt-ud-test.conllu usedtobeforserializationbutcommentedout  1 .1
+python "laplaceNoisyChannel.py" ./fr_gsd-ud-train.conllu ./en_ewt-ud-train.conllu ./fr_gsd-ud-test.conllu ./en_ewt-ud-test.conllu .1
 
+## This is now using all 6 LANGUAGES in the following order: 
+## Lang1 is French, Lang2 is English, Lang3 is German
+## Lang 4 is Spanish, Lang 5 is Italian, Lang 6 is Dutch
+
+To train on train with training set and evaluate on dev with laplace constant of .1:
+
+python "laplace6Lang.py" ./fr_gsd-ud-train.conllu ./en_ewt-ud-train.conllu ./de_gsd-ud-train.conllu ./es_gsd-ud-train.conllu ./it_isdt-ud-train.conllu ./nl_alpino-ud-train.conllu ./fr_gsd-ud-dev.conllu ./en_ewt-ud-dev.conllu ./de_gsd-ud-dev.conllu ./es_gsd-ud-dev.conllu ./it_isdt-ud-dev.conllu ./nl_alpino-ud-dev.conllu .1
+
+##to output results to text file
+python "laplace6Lang.py" ./fr_gsd-ud-train.conllu ./en_ewt-ud-train.conllu ./de_gsd-ud-train.conllu ./es_gsd-ud-train.conllu ./it_isdt-ud-train.conllu ./nl_alpino-ud-train.conllu ./fr_gsd-ud-dev.conllu ./en_ewt-ud-dev.conllu ./de_gsd-ud-dev.conllu ./es_gsd-ud-dev.conllu ./it_isdt-ud-dev.conllu ./nl_alpino-ud-dev.conllu .1 >outputlaplace.txt
