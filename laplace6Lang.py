@@ -523,14 +523,6 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
     en_dev5 = open(pathToTuneLang5, "r", encoding="utf-8")
     en_dev6 = open(pathToTuneLang6, "r", encoding="utf-8")
     
-    #for storing dev bigrams
-    devBigramCount1 = {}
-    devBigramCount2 = {}
-    devBigramCount3 = {}
-    devBigramCount4 = {}
-    devBigramCount5 = {}
-    devBigramCount6 = {}
-    
     tempSentence1 = list()
     tempSentence2 = list()
     tempSentence3 = list()
