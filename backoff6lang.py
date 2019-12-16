@@ -707,27 +707,39 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
     
     #connlu parse and update bigram and unigram counts 
     for tokenlist in parse_incr(en_dev1):
+        
+        ##for debugging
+        #print(tokenlist)
+        
+        #for storing values that will later have redistributed unigram probability
+        tempUnigramBackoffList1 = {}
+        tempUnigramBackoffList2 = {}
+        tempUnigramBackoffList3 = {}
+        tempUnigramBackoffList4 = {}
+        tempUnigramBackoffList5 = {}
+        tempUnigramBackoffList6 = {}
+        
         for token in tokenlist:         
             #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
             #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
             #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
             # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
+            #if not (token["form"].lower()) in wordList :
+            #    tempSentence1.append('<UNK>')
+            #    tempSentence2.append('<UNK>')
+            #    tempSentence3.append('<UNK>')
+            #    tempSentence4.append('<UNK>')
+            #    tempSentence5.append('<UNK>')
+            #    tempSentence6.append('<UNK>')
+            #else:
+            #    ##adding to temporary sentence which will be parsed into bigrams
+            #    #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
+            tempSentence1.append(token["form"].lower())
+            tempSentence2.append(token["form"].lower())
+            tempSentence3.append(token["form"].lower())
+            tempSentence4.append(token["form"].lower())
+            tempSentence5.append(token["form"].lower())
+            tempSentence6.append(token["form"].lower())
 
 
         #now adding eos and bos tags to the sentence
@@ -760,26 +772,33 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
         tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
         
-        #for storing values that will later have redistributed unigram probability
-        tempUnigramBackoffList1 = {}
-        tempUnigramBackoffList2 = {}
-        tempUnigramBackoffList3 = {}
-        tempUnigramBackoffList4 = {}
-        tempUnigramBackoffList5 = {}
-        tempUnigramBackoffList6 = {}
+        #for debugging
+        #print(tempBigram1)
         
         for wordPair in tempBigram1 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram1:
                 normalizingConstant = (series1[wordPair[0]])
                 tempProbability = (backedOffBigram1[wordPair])/(normalizingConstant)
+                #print("lang one bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 probSentenceGivenL1+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList1:
-                    tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[0]] / wordCount1)
+                if wordPair[1] in backedOffList1:
+                    if wordPair[0] in redistributedBigram1:
+                        tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[1]] / wordCount1)
+                    else:
+                        tempProbability = redistributedBigram1['<UNK>'] *( backedOffList1[wordPair[1]] / wordCount1)
                     probSentenceGivenL1+=math.log(tempProbability)
+                    #print("lang one backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang one bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList1:
                         tempUnigramBackoffList1[wordPair] += 1
@@ -792,12 +811,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series2[wordPair[0]])
                 tempProbability = (backedOffBigram2[wordPair])/(normalizingConstant)
                 probSentenceGivenL2+=math.log(tempProbability)
+                #print("lang two bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList2:
-                    tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[0]] / wordCount2)
+                if wordPair[1] in backedOffList2:
+                    if wordPair[0] in redistributedBigram2:
+                        tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[1]] / wordCount2)
+                    else:
+                        tempProbability = redistributedBigram2['<UNK>'] *( backedOffList2[wordPair[1]] / wordCount2)
                     probSentenceGivenL2+=math.log(tempProbability)
+                    #print("lang two backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang two bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList2:
                         tempUnigramBackoffList2[wordPair] += 1
@@ -810,12 +841,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series3[wordPair[0]])
                 tempProbability = (backedOffBigram3[wordPair])/(normalizingConstant)
                 probSentenceGivenL3+=math.log(tempProbability)
+                #print("lang three bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList3:
-                    tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[0]] / wordCount3)
+                if wordPair[1] in backedOffList3:
+                    if wordPair[0] in redistributedBigram3:
+                        tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[1]] / wordCount3)
+                    else:
+                        tempProbability = redistributedBigram3['<UNK>'] *( backedOffList3[wordPair[1]] / wordCount3)
                     probSentenceGivenL3+=math.log(tempProbability)
+                    #print("lang three backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang three bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList3:
                         tempUnigramBackoffList3[wordPair] += 1
@@ -825,33 +868,57 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         for wordPair in tempBigram4 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram4:
+                #print("lang four bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 normalizingConstant = (series4[wordPair[0]])
                 tempProbability = (backedOffBigram4[wordPair])/(normalizingConstant)
                 probSentenceGivenL4+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList4:
-                    tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[0]] / wordCount4)
+                if wordPair[1] in backedOffList4:
+                    if wordPair[0] in redistributedBigram4:
+                        tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[1]] / wordCount4)
+                    else:
+                        tempProbability = redistributedBigram4['<UNK>'] *( backedOffList4[wordPair[1]] / wordCount4)
                     probSentenceGivenL4+=math.log(tempProbability)
+                    #print("lang four backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang four bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList4:
                         tempUnigramBackoffList4[wordPair] += 1
                     else:
                         tempUnigramBackoffList4[wordPair] = 1
                 
-        for wordPair in tempBigram2 :
+        for wordPair in tempBigram5 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram5:
                 normalizingConstant = (series5[wordPair[0]])
                 tempProbability = (backedOffBigram5[wordPair])/(normalizingConstant)
                 probSentenceGivenL5+=math.log(tempProbability)
+                #print("lang five bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList5:
-                    tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[0]] / wordCount5)
+                if wordPair[1] in backedOffList5:
+                    if wordPair[0] in redistributedBigram5:
+                        tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[1]] / wordCount5)
+                    else:
+                        tempProbability = redistributedBigram5['<UNK>'] *( backedOffList5[wordPair[1]] / wordCount5)
                     probSentenceGivenL5+=math.log(tempProbability)
+                    #print("lang five backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang five bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList5:
                         tempUnigramBackoffList5[wordPair] += 1
@@ -864,12 +931,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series6[wordPair[0]])
                 tempProbability = (backedOffBigram6[wordPair])/(normalizingConstant)
                 probSentenceGivenL6+=math.log(tempProbability)
+                #print("lang six bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList6:
-                    tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[0]] / wordCount6)
+                if wordPair[1] in backedOffList6:
+                    if wordPair[0] in redistributedBigram6:
+                        tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[1]] / wordCount6)
+                    else:
+                        tempProbability = redistributedBigram6['<UNK>'] *( backedOffList6[wordPair[1]] / wordCount6)
                     probSentenceGivenL6+=math.log(tempProbability)
+                    #print("lang six backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang six bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList6:
                         tempUnigramBackoffList6[wordPair] += 1
@@ -877,7 +956,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                         tempUnigramBackoffList6[wordPair] = 1
         
         #redistribute the probabilities that had to be backed off twice.
-        print("Now redistributing unigram backoff as necessary.\n")
+        #print("Now redistributing unigram backoff as necessary.\n")
+        
         
         #First need to count number of oov types
         numOOVTypes1 = len(tempUnigramBackoffList1)
@@ -886,6 +966,13 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         numOOVTypes4 = len(tempUnigramBackoffList4)
         numOOVTypes5 = len(tempUnigramBackoffList5)
         numOOVTypes6 = len(tempUnigramBackoffList6)
+        
+        #print(numOOVTypes1)
+        #print(numOOVTypes2)
+        #print(numOOVTypes3)
+        #print(numOOVTypes4)
+        #print(numOOVTypes5)
+        #print(numOOVTypes6)
         
         #then need to get b/v values where V is the size of the total vocab of known and previously unknown newly encountered words
         #b is the probability mass set aside for redistribution
@@ -899,54 +986,58 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList1.items():
             if key[0] in redistributedBigram1:
-                tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
+                 tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram1['<UNK>']*distValueUnigram1)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL1+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList2.items():
+            #tempProbabilitySum = math.log(distValueUnigram2)
             if key[0] in redistributedBigram2:
                 tempProbabilitySum = value * math.log(redistributedBigram2[key[0]]*distValueUnigram2)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram2['<UNK>']*distValueUnigram2)
-            probSentenceGivenL2+=tempProbabilitySum
+            probSentenceGivenL2+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList3.items():
+            #tempProbabilitySum = math.log(distValueUnigram3)
             if key[0] in redistributedBigram3:
                 tempProbabilitySum = value * math.log(redistributedBigram3[key[0]]*distValueUnigram3)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram3['<UNK>']*distValueUnigram3)
-            probSentenceGivenL3+=tempProbabilitySum
+            probSentenceGivenL3+=(tempProbabilitySum)
             
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList4.items():
+            #tempProbabilitySum = math.log(distValueUnigram4)
             if key[0] in redistributedBigram4:
                 tempProbabilitySum = value * math.log(redistributedBigram4[key[0]]*distValueUnigram4)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram4['<UNK>']*distValueUnigram4)
-            probSentenceGivenL4+=tempProbabilitySum
+            probSentenceGivenL4+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList5.items():
+            #tempProbabilitySum = math.log(distValueUnigram5)
             if key[0] in redistributedBigram5:
                 tempProbabilitySum = value * math.log(redistributedBigram5[key[0]]*distValueUnigram5)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram5['<UNK>']*distValueUnigram5)
-            probSentenceGivenL5+=tempProbabilitySum
+            probSentenceGivenL5+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList6.items():
+            #tempProbabilitySum = math.log(distValueUnigram6)
             if key[0] in redistributedBigram6:
                 tempProbabilitySum = value * math.log(redistributedBigram6[key[0]]*distValueUnigram6)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram6['<UNK>']*distValueUnigram6)
-            probSentenceGivenL6+=tempProbabilitySum
+            probSentenceGivenL6+=(tempProbabilitySum)
         
-        
-        print("Now predicting language\n")
+        #print("Now predicting language\n")
         #predict which language it is using logs
         logProb1 = probSentenceGivenL1 + math.log(probLang1)
         logProb2 = probSentenceGivenL2 + math.log(probLang2)
@@ -967,7 +1058,9 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         
         #find maximum of these log likelihoods and set that as the predicted language
         Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
+        #for debugging
+        #print(Keymax)
+        predictedLang.append(str(Keymax))
         
         #append the actual language this dev set is from to actual language list
         actualLang.append('Lang1')
@@ -983,6 +1076,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempSentence5 = []
         tempSentence6 = []
         
+        #for debugging adding a break
+        #break
         
     tempSentence1 = []
     tempSentence2 = []
@@ -992,30 +1087,42 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
     tempSentence6 = []
     
     en_dev1.close()
-    """
+   
     #connlu parse and update bigram and unigram counts 
     for tokenlist in parse_incr(en_dev2):
+        
+        ##for debugging
+        #print(tokenlist)
+        
+        #for storing values that will later have redistributed unigram probability
+        tempUnigramBackoffList1 = {}
+        tempUnigramBackoffList2 = {}
+        tempUnigramBackoffList3 = {}
+        tempUnigramBackoffList4 = {}
+        tempUnigramBackoffList5 = {}
+        tempUnigramBackoffList6 = {}
+        
         for token in tokenlist:         
             #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
             #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
             #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
             # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
+            #if not (token["form"].lower()) in wordList :
+            #    tempSentence1.append('<UNK>')
+            #    tempSentence2.append('<UNK>')
+            #    tempSentence3.append('<UNK>')
+            #    tempSentence4.append('<UNK>')
+            #    tempSentence5.append('<UNK>')
+            #    tempSentence6.append('<UNK>')
+            #else:
+            #    ##adding to temporary sentence which will be parsed into bigrams
+            #    #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
+            tempSentence1.append(token["form"].lower())
+            tempSentence2.append(token["form"].lower())
+            tempSentence3.append(token["form"].lower())
+            tempSentence4.append(token["form"].lower())
+            tempSentence5.append(token["form"].lower())
+            tempSentence6.append(token["form"].lower())
 
 
         #now adding eos and bos tags to the sentence
@@ -1048,26 +1155,33 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
         tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
         
-        #for storing values that will later have redistributed unigram probability
-        tempUnigramBackoffList1 = {}
-        tempUnigramBackoffList2 = {}
-        tempUnigramBackoffList3 = {}
-        tempUnigramBackoffList4 = {}
-        tempUnigramBackoffList5 = {}
-        tempUnigramBackoffList6 = {}
+        #for debugging
+        #print(tempBigram1)
         
         for wordPair in tempBigram1 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram1:
                 normalizingConstant = (series1[wordPair[0]])
                 tempProbability = (backedOffBigram1[wordPair])/(normalizingConstant)
+                #print("lang one bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 probSentenceGivenL1+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList1:
-                    tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[0]] / wordCount1)
+                if wordPair[1] in backedOffList1:
+                    if wordPair[0] in redistributedBigram1:
+                        tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[1]] / wordCount1)
+                    else:
+                        tempProbability = redistributedBigram1['<UNK>'] *( backedOffList1[wordPair[1]] / wordCount1)
                     probSentenceGivenL1+=math.log(tempProbability)
+                    #print("lang one backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang one bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList1:
                         tempUnigramBackoffList1[wordPair] += 1
@@ -1080,12 +1194,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series2[wordPair[0]])
                 tempProbability = (backedOffBigram2[wordPair])/(normalizingConstant)
                 probSentenceGivenL2+=math.log(tempProbability)
+                #print("lang two bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList2:
-                    tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[0]] / wordCount2)
+                if wordPair[1] in backedOffList2:
+                    if wordPair[0] in redistributedBigram2:
+                        tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[1]] / wordCount2)
+                    else:
+                        tempProbability = redistributedBigram2['<UNK>'] *( backedOffList2[wordPair[1]] / wordCount2)
                     probSentenceGivenL2+=math.log(tempProbability)
+                    #print("lang two backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang two bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList2:
                         tempUnigramBackoffList2[wordPair] += 1
@@ -1098,12 +1224,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series3[wordPair[0]])
                 tempProbability = (backedOffBigram3[wordPair])/(normalizingConstant)
                 probSentenceGivenL3+=math.log(tempProbability)
+                #print("lang three bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList3:
-                    tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[0]] / wordCount3)
+                if wordPair[1] in backedOffList3:
+                    if wordPair[0] in redistributedBigram3:
+                        tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[1]] / wordCount3)
+                    else:
+                        tempProbability = redistributedBigram3['<UNK>'] *( backedOffList3[wordPair[1]] / wordCount3)
                     probSentenceGivenL3+=math.log(tempProbability)
+                    #print("lang three backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang three bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList3:
                         tempUnigramBackoffList3[wordPair] += 1
@@ -1113,33 +1251,57 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         for wordPair in tempBigram4 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram4:
+                #print("lang four bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 normalizingConstant = (series4[wordPair[0]])
                 tempProbability = (backedOffBigram4[wordPair])/(normalizingConstant)
                 probSentenceGivenL4+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList4:
-                    tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[0]] / wordCount4)
+                if wordPair[1] in backedOffList4:
+                    if wordPair[0] in redistributedBigram4:
+                        tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[1]] / wordCount4)
+                    else:
+                        tempProbability = redistributedBigram4['<UNK>'] *( backedOffList4[wordPair[1]] / wordCount4)
                     probSentenceGivenL4+=math.log(tempProbability)
+                    #print("lang four backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang four bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList4:
                         tempUnigramBackoffList4[wordPair] += 1
                     else:
                         tempUnigramBackoffList4[wordPair] = 1
                 
-        for wordPair in tempBigram2 :
+        for wordPair in tempBigram5 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram5:
                 normalizingConstant = (series5[wordPair[0]])
                 tempProbability = (backedOffBigram5[wordPair])/(normalizingConstant)
                 probSentenceGivenL5+=math.log(tempProbability)
+                #print("lang five bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList5:
-                    tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[0]] / wordCount5)
+                if wordPair[1] in backedOffList5:
+                    if wordPair[0] in redistributedBigram5:
+                        tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[1]] / wordCount5)
+                    else:
+                        tempProbability = redistributedBigram5['<UNK>'] *( backedOffList5[wordPair[1]] / wordCount5)
                     probSentenceGivenL5+=math.log(tempProbability)
+                    #print("lang five backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang five bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList5:
                         tempUnigramBackoffList5[wordPair] += 1
@@ -1152,12 +1314,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series6[wordPair[0]])
                 tempProbability = (backedOffBigram6[wordPair])/(normalizingConstant)
                 probSentenceGivenL6+=math.log(tempProbability)
+                #print("lang six bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList6:
-                    tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[0]] / wordCount6)
+                if wordPair[1] in backedOffList6:
+                    if wordPair[0] in redistributedBigram6:
+                        tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[1]] / wordCount6)
+                    else:
+                        tempProbability = redistributedBigram6['<UNK>'] *( backedOffList6[wordPair[1]] / wordCount6)
                     probSentenceGivenL6+=math.log(tempProbability)
+                    #print("lang six backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang six bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList6:
                         tempUnigramBackoffList6[wordPair] += 1
@@ -1165,7 +1339,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                         tempUnigramBackoffList6[wordPair] = 1
         
         #redistribute the probabilities that had to be backed off twice.
-        print("Now redistributing unigram backoff as necessary.\n")
+        #print("Now redistributing unigram backoff as necessary.\n")
+        
         
         #First need to count number of oov types
         numOOVTypes1 = len(tempUnigramBackoffList1)
@@ -1174,6 +1349,13 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         numOOVTypes4 = len(tempUnigramBackoffList4)
         numOOVTypes5 = len(tempUnigramBackoffList5)
         numOOVTypes6 = len(tempUnigramBackoffList6)
+        
+        #print(numOOVTypes1)
+        #print(numOOVTypes2)
+        #print(numOOVTypes3)
+        #print(numOOVTypes4)
+        #print(numOOVTypes5)
+        #print(numOOVTypes6)
         
         #then need to get b/v values where V is the size of the total vocab of known and previously unknown newly encountered words
         #b is the probability mass set aside for redistribution
@@ -1187,54 +1369,58 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList1.items():
             if key[0] in redistributedBigram1:
-                tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
+                 tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram1['<UNK>']*distValueUnigram1)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL1+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList2.items():
+            #tempProbabilitySum = math.log(distValueUnigram2)
             if key[0] in redistributedBigram2:
                 tempProbabilitySum = value * math.log(redistributedBigram2[key[0]]*distValueUnigram2)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram2['<UNK>']*distValueUnigram2)
-            probSentenceGivenL2+=tempProbabilitySum
+            probSentenceGivenL2+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList3.items():
+            #tempProbabilitySum = math.log(distValueUnigram3)
             if key[0] in redistributedBigram3:
                 tempProbabilitySum = value * math.log(redistributedBigram3[key[0]]*distValueUnigram3)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram3['<UNK>']*distValueUnigram3)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL3+=(tempProbabilitySum)
             
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList4.items():
+            #tempProbabilitySum = math.log(distValueUnigram4)
             if key[0] in redistributedBigram4:
                 tempProbabilitySum = value * math.log(redistributedBigram4[key[0]]*distValueUnigram4)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram4['<UNK>']*distValueUnigram4)
-            probSentenceGivenL4+=tempProbabilitySum
+            probSentenceGivenL4+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList5.items():
+            #tempProbabilitySum = math.log(distValueUnigram5)
             if key[0] in redistributedBigram5:
                 tempProbabilitySum = value * math.log(redistributedBigram5[key[0]]*distValueUnigram5)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram5['<UNK>']*distValueUnigram5)
-            probSentenceGivenL5+=tempProbabilitySum
+            probSentenceGivenL5+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList6.items():
+            #tempProbabilitySum = math.log(distValueUnigram6)
             if key[0] in redistributedBigram6:
                 tempProbabilitySum = value * math.log(redistributedBigram6[key[0]]*distValueUnigram6)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram6['<UNK>']*distValueUnigram6)
-            probSentenceGivenL6+=tempProbabilitySum
+            probSentenceGivenL6+=(tempProbabilitySum)
         
-        
-        print("Now predicting language")
+        #print("Now predicting language\n")
         #predict which language it is using logs
         logProb1 = probSentenceGivenL1 + math.log(probLang1)
         logProb2 = probSentenceGivenL2 + math.log(probLang2)
@@ -1255,13 +1441,15 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         
         #find maximum of these log likelihoods and set that as the predicted language
         Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
+        #for debugging
+        #print(Keymax)
+        predictedLang.append(str(Keymax))
         
         #append the actual language this dev set is from to actual language list
         actualLang.append('Lang2')
         
         countDevLang2+=1
-        print("Done with %d sentences in dev set for Lang 2"%(countDevLang2))
+        #print("Done with %d sentences in dev set for Lang 2\n"%(countDevLang2))
         
         #resetting the temporary list of words per each sentence 
         tempSentence1 = []
@@ -1271,6 +1459,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempSentence5 = []
         tempSentence6 = []
         
+        #for debugging adding a break
+        #break
         
     tempSentence1 = []
     tempSentence2 = []
@@ -1283,27 +1473,39 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
     
     #connlu parse and update bigram and unigram counts 
     for tokenlist in parse_incr(en_dev3):
+        
+        ##for debugging
+        #print(tokenlist)
+        
+        #for storing values that will later have redistributed unigram probability
+        tempUnigramBackoffList1 = {}
+        tempUnigramBackoffList2 = {}
+        tempUnigramBackoffList3 = {}
+        tempUnigramBackoffList4 = {}
+        tempUnigramBackoffList5 = {}
+        tempUnigramBackoffList6 = {}
+        
         for token in tokenlist:         
             #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
             #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
             #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
             # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
+            #if not (token["form"].lower()) in wordList :
+            #    tempSentence1.append('<UNK>')
+            #    tempSentence2.append('<UNK>')
+            #    tempSentence3.append('<UNK>')
+            #    tempSentence4.append('<UNK>')
+            #    tempSentence5.append('<UNK>')
+            #    tempSentence6.append('<UNK>')
+            #else:
+            #    ##adding to temporary sentence which will be parsed into bigrams
+            #    #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
+            tempSentence1.append(token["form"].lower())
+            tempSentence2.append(token["form"].lower())
+            tempSentence3.append(token["form"].lower())
+            tempSentence4.append(token["form"].lower())
+            tempSentence5.append(token["form"].lower())
+            tempSentence6.append(token["form"].lower())
 
 
         #now adding eos and bos tags to the sentence
@@ -1336,26 +1538,33 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
         tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
         
-        #for storing values that will later have redistributed unigram probability
-        tempUnigramBackoffList1 = {}
-        tempUnigramBackoffList2 = {}
-        tempUnigramBackoffList3 = {}
-        tempUnigramBackoffList4 = {}
-        tempUnigramBackoffList5 = {}
-        tempUnigramBackoffList6 = {}
+        #for debugging
+        #print(tempBigram1)
         
         for wordPair in tempBigram1 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram1:
                 normalizingConstant = (series1[wordPair[0]])
                 tempProbability = (backedOffBigram1[wordPair])/(normalizingConstant)
+                #print("lang one bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 probSentenceGivenL1+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList1:
-                    tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[0]] / wordCount1)
+                if wordPair[1] in backedOffList1:
+                    if wordPair[0] in redistributedBigram1:
+                        tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[1]] / wordCount1)
+                    else:
+                        tempProbability = redistributedBigram1['<UNK>'] *( backedOffList1[wordPair[1]] / wordCount1)
                     probSentenceGivenL1+=math.log(tempProbability)
+                    #print("lang one backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang one bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList1:
                         tempUnigramBackoffList1[wordPair] += 1
@@ -1368,12 +1577,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series2[wordPair[0]])
                 tempProbability = (backedOffBigram2[wordPair])/(normalizingConstant)
                 probSentenceGivenL2+=math.log(tempProbability)
+                #print("lang two bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList2:
-                    tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[0]] / wordCount2)
+                if wordPair[1] in backedOffList2:
+                    if wordPair[0] in redistributedBigram2:
+                        tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[1]] / wordCount2)
+                    else:
+                        tempProbability = redistributedBigram2['<UNK>'] *( backedOffList2[wordPair[1]] / wordCount2)
                     probSentenceGivenL2+=math.log(tempProbability)
+                    #print("lang two backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang two bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList2:
                         tempUnigramBackoffList2[wordPair] += 1
@@ -1386,12 +1607,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series3[wordPair[0]])
                 tempProbability = (backedOffBigram3[wordPair])/(normalizingConstant)
                 probSentenceGivenL3+=math.log(tempProbability)
+                #print("lang three bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList3:
-                    tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[0]] / wordCount3)
+                if wordPair[1] in backedOffList3:
+                    if wordPair[0] in redistributedBigram3:
+                        tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[1]] / wordCount3)
+                    else:
+                        tempProbability = redistributedBigram3['<UNK>'] *( backedOffList3[wordPair[1]] / wordCount3)
                     probSentenceGivenL3+=math.log(tempProbability)
+                    #print("lang three backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang three bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList3:
                         tempUnigramBackoffList3[wordPair] += 1
@@ -1401,33 +1634,57 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         for wordPair in tempBigram4 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram4:
+                #print("lang four bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 normalizingConstant = (series4[wordPair[0]])
                 tempProbability = (backedOffBigram4[wordPair])/(normalizingConstant)
                 probSentenceGivenL4+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList4:
-                    tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[0]] / wordCount4)
+                if wordPair[1] in backedOffList4:
+                    if wordPair[0] in redistributedBigram4:
+                        tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[1]] / wordCount4)
+                    else:
+                        tempProbability = redistributedBigram4['<UNK>'] *( backedOffList4[wordPair[1]] / wordCount4)
                     probSentenceGivenL4+=math.log(tempProbability)
+                    #print("lang four backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang four bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList4:
                         tempUnigramBackoffList4[wordPair] += 1
                     else:
                         tempUnigramBackoffList4[wordPair] = 1
                 
-        for wordPair in tempBigram2 :
+        for wordPair in tempBigram5 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram5:
                 normalizingConstant = (series5[wordPair[0]])
                 tempProbability = (backedOffBigram5[wordPair])/(normalizingConstant)
                 probSentenceGivenL5+=math.log(tempProbability)
+                #print("lang five bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList5:
-                    tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[0]] / wordCount5)
+                if wordPair[1] in backedOffList5:
+                    if wordPair[0] in redistributedBigram5:
+                        tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[1]] / wordCount5)
+                    else:
+                        tempProbability = redistributedBigram5['<UNK>'] *( backedOffList5[wordPair[1]] / wordCount5)
                     probSentenceGivenL5+=math.log(tempProbability)
+                    #print("lang five backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang five bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList5:
                         tempUnigramBackoffList5[wordPair] += 1
@@ -1440,12 +1697,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series6[wordPair[0]])
                 tempProbability = (backedOffBigram6[wordPair])/(normalizingConstant)
                 probSentenceGivenL6+=math.log(tempProbability)
+                #print("lang six bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList6:
-                    tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[0]] / wordCount6)
+                if wordPair[1] in backedOffList6:
+                    if wordPair[0] in redistributedBigram6:
+                        tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[1]] / wordCount6)
+                    else:
+                        tempProbability = redistributedBigram6['<UNK>'] *( backedOffList6[wordPair[1]] / wordCount6)
                     probSentenceGivenL6+=math.log(tempProbability)
+                    #print("lang six backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang six bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList6:
                         tempUnigramBackoffList6[wordPair] += 1
@@ -1453,7 +1722,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                         tempUnigramBackoffList6[wordPair] = 1
         
         #redistribute the probabilities that had to be backed off twice.
-        print("Now redistributing unigram backoff as necessary.\n")
+        #print("Now redistributing unigram backoff as necessary.\n")
+        
         
         #First need to count number of oov types
         numOOVTypes1 = len(tempUnigramBackoffList1)
@@ -1462,6 +1732,13 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         numOOVTypes4 = len(tempUnigramBackoffList4)
         numOOVTypes5 = len(tempUnigramBackoffList5)
         numOOVTypes6 = len(tempUnigramBackoffList6)
+        
+        #print(numOOVTypes1)
+        #print(numOOVTypes2)
+        #print(numOOVTypes3)
+        #print(numOOVTypes4)
+        #print(numOOVTypes5)
+        #print(numOOVTypes6)
         
         #then need to get b/v values where V is the size of the total vocab of known and previously unknown newly encountered words
         #b is the probability mass set aside for redistribution
@@ -1475,54 +1752,58 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList1.items():
             if key[0] in redistributedBigram1:
-                tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
+                 tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram1['<UNK>']*distValueUnigram1)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL1+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList2.items():
+            #tempProbabilitySum = math.log(distValueUnigram2)
             if key[0] in redistributedBigram2:
                 tempProbabilitySum = value * math.log(redistributedBigram2[key[0]]*distValueUnigram2)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram2['<UNK>']*distValueUnigram2)
-            probSentenceGivenL2+=tempProbabilitySum
+            probSentenceGivenL2+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList3.items():
+            #tempProbabilitySum = math.log(distValueUnigram3)
             if key[0] in redistributedBigram3:
                 tempProbabilitySum = value * math.log(redistributedBigram3[key[0]]*distValueUnigram3)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram3['<UNK>']*distValueUnigram3)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL3+=(tempProbabilitySum)
             
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList4.items():
+            #tempProbabilitySum = math.log(distValueUnigram4)
             if key[0] in redistributedBigram4:
                 tempProbabilitySum = value * math.log(redistributedBigram4[key[0]]*distValueUnigram4)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram4['<UNK>']*distValueUnigram4)
-            probSentenceGivenL4+=tempProbabilitySum
+            probSentenceGivenL4+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList5.items():
+            #tempProbabilitySum = math.log(distValueUnigram5)
             if key[0] in redistributedBigram5:
                 tempProbabilitySum = value * math.log(redistributedBigram5[key[0]]*distValueUnigram5)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram5['<UNK>']*distValueUnigram5)
-            probSentenceGivenL5+=tempProbabilitySum
+            probSentenceGivenL5+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList6.items():
+            #tempProbabilitySum = math.log(distValueUnigram6)
             if key[0] in redistributedBigram6:
                 tempProbabilitySum = value * math.log(redistributedBigram6[key[0]]*distValueUnigram6)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram6['<UNK>']*distValueUnigram6)
-            probSentenceGivenL6+=tempProbabilitySum
+            probSentenceGivenL6+=(tempProbabilitySum)
         
-        
-        print("Now predicting language")
+        #print("Now predicting language\n")
         #predict which language it is using logs
         logProb1 = probSentenceGivenL1 + math.log(probLang1)
         logProb2 = probSentenceGivenL2 + math.log(probLang2)
@@ -1543,13 +1824,15 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         
         #find maximum of these log likelihoods and set that as the predicted language
         Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
+        #for debugging
+        #print(Keymax)
+        predictedLang.append(str(Keymax))
         
         #append the actual language this dev set is from to actual language list
         actualLang.append('Lang3')
         
         countDevLang3+=1
-        print("Done with %d sentences in dev set for Lang 3"%(countDevLang3))
+        #print("Done with %d sentences in dev set for Lang 3\n"%(countDevLang3))
         
         #resetting the temporary list of words per each sentence 
         tempSentence1 = []
@@ -1559,6 +1842,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempSentence5 = []
         tempSentence6 = []
         
+        #for debugging adding a break
+        #break
         
     tempSentence1 = []
     tempSentence2 = []
@@ -1568,30 +1853,42 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
     tempSentence6 = []
     
     en_dev3.close()
-    
+   
     #connlu parse and update bigram and unigram counts 
     for tokenlist in parse_incr(en_dev4):
+        
+        ##for debugging
+        #print(tokenlist)
+        
+        #for storing values that will later have redistributed unigram probability
+        tempUnigramBackoffList1 = {}
+        tempUnigramBackoffList2 = {}
+        tempUnigramBackoffList3 = {}
+        tempUnigramBackoffList4 = {}
+        tempUnigramBackoffList5 = {}
+        tempUnigramBackoffList6 = {}
+        
         for token in tokenlist:         
             #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
             #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
             #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
             # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
+            #if not (token["form"].lower()) in wordList :
+            #    tempSentence1.append('<UNK>')
+            #    tempSentence2.append('<UNK>')
+            #    tempSentence3.append('<UNK>')
+            #    tempSentence4.append('<UNK>')
+            #    tempSentence5.append('<UNK>')
+            #    tempSentence6.append('<UNK>')
+            #else:
+            #    ##adding to temporary sentence which will be parsed into bigrams
+            #    #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
+            tempSentence1.append(token["form"].lower())
+            tempSentence2.append(token["form"].lower())
+            tempSentence3.append(token["form"].lower())
+            tempSentence4.append(token["form"].lower())
+            tempSentence5.append(token["form"].lower())
+            tempSentence6.append(token["form"].lower())
 
 
         #now adding eos and bos tags to the sentence
@@ -1624,26 +1921,33 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
         tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
         
-        #for storing values that will later have redistributed unigram probability
-        tempUnigramBackoffList1 = {}
-        tempUnigramBackoffList2 = {}
-        tempUnigramBackoffList3 = {}
-        tempUnigramBackoffList4 = {}
-        tempUnigramBackoffList5 = {}
-        tempUnigramBackoffList6 = {}
+        #for debugging
+        #print(tempBigram1)
         
         for wordPair in tempBigram1 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram1:
                 normalizingConstant = (series1[wordPair[0]])
                 tempProbability = (backedOffBigram1[wordPair])/(normalizingConstant)
+                #print("lang one bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 probSentenceGivenL1+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList1:
-                    tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[0]] / wordCount1)
+                if wordPair[1] in backedOffList1:
+                    if wordPair[0] in redistributedBigram1:
+                        tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[1]] / wordCount1)
+                    else:
+                        tempProbability = redistributedBigram1['<UNK>'] *( backedOffList1[wordPair[1]] / wordCount1)
                     probSentenceGivenL1+=math.log(tempProbability)
+                    #print("lang one backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang one bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList1:
                         tempUnigramBackoffList1[wordPair] += 1
@@ -1656,12 +1960,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series2[wordPair[0]])
                 tempProbability = (backedOffBigram2[wordPair])/(normalizingConstant)
                 probSentenceGivenL2+=math.log(tempProbability)
+                #print("lang two bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList2:
-                    tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[0]] / wordCount2)
+                if wordPair[1] in backedOffList2:
+                    if wordPair[0] in redistributedBigram2:
+                        tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[1]] / wordCount2)
+                    else:
+                        tempProbability = redistributedBigram2['<UNK>'] *( backedOffList2[wordPair[1]] / wordCount2)
                     probSentenceGivenL2+=math.log(tempProbability)
+                    #print("lang two backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang two bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList2:
                         tempUnigramBackoffList2[wordPair] += 1
@@ -1674,12 +1990,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series3[wordPair[0]])
                 tempProbability = (backedOffBigram3[wordPair])/(normalizingConstant)
                 probSentenceGivenL3+=math.log(tempProbability)
+                #print("lang three bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList3:
-                    tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[0]] / wordCount3)
+                if wordPair[1] in backedOffList3:
+                    if wordPair[0] in redistributedBigram3:
+                        tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[1]] / wordCount3)
+                    else:
+                        tempProbability = redistributedBigram3['<UNK>'] *( backedOffList3[wordPair[1]] / wordCount3)
                     probSentenceGivenL3+=math.log(tempProbability)
+                    #print("lang three backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang three bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList3:
                         tempUnigramBackoffList3[wordPair] += 1
@@ -1689,33 +2017,57 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         for wordPair in tempBigram4 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram4:
+                #print("lang four bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 normalizingConstant = (series4[wordPair[0]])
                 tempProbability = (backedOffBigram4[wordPair])/(normalizingConstant)
                 probSentenceGivenL4+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList4:
-                    tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[0]] / wordCount4)
+                if wordPair[1] in backedOffList4:
+                    if wordPair[0] in redistributedBigram4:
+                        tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[1]] / wordCount4)
+                    else:
+                        tempProbability = redistributedBigram4['<UNK>'] *( backedOffList4[wordPair[1]] / wordCount4)
                     probSentenceGivenL4+=math.log(tempProbability)
+                    #print("lang four backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang four bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList4:
                         tempUnigramBackoffList4[wordPair] += 1
                     else:
                         tempUnigramBackoffList4[wordPair] = 1
                 
-        for wordPair in tempBigram2 :
+        for wordPair in tempBigram5 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram5:
                 normalizingConstant = (series5[wordPair[0]])
                 tempProbability = (backedOffBigram5[wordPair])/(normalizingConstant)
                 probSentenceGivenL5+=math.log(tempProbability)
+                #print("lang five bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList5:
-                    tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[0]] / wordCount5)
+                if wordPair[1] in backedOffList5:
+                    if wordPair[0] in redistributedBigram5:
+                        tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[1]] / wordCount5)
+                    else:
+                        tempProbability = redistributedBigram5['<UNK>'] *( backedOffList5[wordPair[1]] / wordCount5)
                     probSentenceGivenL5+=math.log(tempProbability)
+                    #print("lang five backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang five bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList5:
                         tempUnigramBackoffList5[wordPair] += 1
@@ -1728,12 +2080,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series6[wordPair[0]])
                 tempProbability = (backedOffBigram6[wordPair])/(normalizingConstant)
                 probSentenceGivenL6+=math.log(tempProbability)
+                #print("lang six bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList6:
-                    tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[0]] / wordCount6)
+                if wordPair[1] in backedOffList6:
+                    if wordPair[0] in redistributedBigram6:
+                        tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[1]] / wordCount6)
+                    else:
+                        tempProbability = redistributedBigram6['<UNK>'] *( backedOffList6[wordPair[1]] / wordCount6)
                     probSentenceGivenL6+=math.log(tempProbability)
+                    #print("lang six backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang six bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList6:
                         tempUnigramBackoffList6[wordPair] += 1
@@ -1741,7 +2105,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                         tempUnigramBackoffList6[wordPair] = 1
         
         #redistribute the probabilities that had to be backed off twice.
-        print("Now redistributing unigram backoff as necessary.\n")
+        #print("Now redistributing unigram backoff as necessary.\n")
+        
         
         #First need to count number of oov types
         numOOVTypes1 = len(tempUnigramBackoffList1)
@@ -1750,6 +2115,13 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         numOOVTypes4 = len(tempUnigramBackoffList4)
         numOOVTypes5 = len(tempUnigramBackoffList5)
         numOOVTypes6 = len(tempUnigramBackoffList6)
+        
+        #print(numOOVTypes1)
+        #print(numOOVTypes2)
+        #print(numOOVTypes3)
+        #print(numOOVTypes4)
+        #print(numOOVTypes5)
+        #print(numOOVTypes6)
         
         #then need to get b/v values where V is the size of the total vocab of known and previously unknown newly encountered words
         #b is the probability mass set aside for redistribution
@@ -1763,54 +2135,58 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList1.items():
             if key[0] in redistributedBigram1:
-                tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
+                 tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram1['<UNK>']*distValueUnigram1)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL1+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList2.items():
+            #tempProbabilitySum = math.log(distValueUnigram2)
             if key[0] in redistributedBigram2:
                 tempProbabilitySum = value * math.log(redistributedBigram2[key[0]]*distValueUnigram2)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram2['<UNK>']*distValueUnigram2)
-            probSentenceGivenL2+=tempProbabilitySum
+            probSentenceGivenL2+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList3.items():
+            #tempProbabilitySum = math.log(distValueUnigram3)
             if key[0] in redistributedBigram3:
                 tempProbabilitySum = value * math.log(redistributedBigram3[key[0]]*distValueUnigram3)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram3['<UNK>']*distValueUnigram3)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL3+=(tempProbabilitySum)
             
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList4.items():
+            #tempProbabilitySum = math.log(distValueUnigram4)
             if key[0] in redistributedBigram4:
                 tempProbabilitySum = value * math.log(redistributedBigram4[key[0]]*distValueUnigram4)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram4['<UNK>']*distValueUnigram4)
-            probSentenceGivenL4+=tempProbabilitySum
+            probSentenceGivenL4+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList5.items():
+            #tempProbabilitySum = math.log(distValueUnigram5)
             if key[0] in redistributedBigram5:
                 tempProbabilitySum = value * math.log(redistributedBigram5[key[0]]*distValueUnigram5)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram5['<UNK>']*distValueUnigram5)
-            probSentenceGivenL5+=tempProbabilitySum
+            probSentenceGivenL5+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList6.items():
+            #tempProbabilitySum = math.log(distValueUnigram6)
             if key[0] in redistributedBigram6:
                 tempProbabilitySum = value * math.log(redistributedBigram6[key[0]]*distValueUnigram6)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram6['<UNK>']*distValueUnigram6)
-            probSentenceGivenL6+=tempProbabilitySum
+            probSentenceGivenL6+=(tempProbabilitySum)
         
-        
-        print("Now predicting language")
+        #print("Now predicting language\n")
         #predict which language it is using logs
         logProb1 = probSentenceGivenL1 + math.log(probLang1)
         logProb2 = probSentenceGivenL2 + math.log(probLang2)
@@ -1831,13 +2207,15 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         
         #find maximum of these log likelihoods and set that as the predicted language
         Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
+        #for debugging
+        #print(Keymax)
+        predictedLang.append(str(Keymax))
         
         #append the actual language this dev set is from to actual language list
         actualLang.append('Lang4')
         
         countDevLang4+=1
-        print("Done with %d sentences in dev set for Lang 4"%(countDevLang4))
+        #print("Done with %d sentences in dev set for Lang 4\n"%(countDevLang4))
         
         #resetting the temporary list of words per each sentence 
         tempSentence1 = []
@@ -1847,6 +2225,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempSentence5 = []
         tempSentence6 = []
         
+        #for debugging adding a break
+        #break
         
     tempSentence1 = []
     tempSentence2 = []
@@ -1856,30 +2236,42 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
     tempSentence6 = []
     
     en_dev4.close()
-    
+   
     #connlu parse and update bigram and unigram counts 
     for tokenlist in parse_incr(en_dev5):
+        
+        ##for debugging
+        #print(tokenlist)
+        
+        #for storing values that will later have redistributed unigram probability
+        tempUnigramBackoffList1 = {}
+        tempUnigramBackoffList2 = {}
+        tempUnigramBackoffList3 = {}
+        tempUnigramBackoffList4 = {}
+        tempUnigramBackoffList5 = {}
+        tempUnigramBackoffList6 = {}
+        
         for token in tokenlist:         
             #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
             #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
             #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
             # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
+            #if not (token["form"].lower()) in wordList :
+            #    tempSentence1.append('<UNK>')
+            #    tempSentence2.append('<UNK>')
+            #    tempSentence3.append('<UNK>')
+            #    tempSentence4.append('<UNK>')
+            #    tempSentence5.append('<UNK>')
+            #    tempSentence6.append('<UNK>')
+            #else:
+            #    ##adding to temporary sentence which will be parsed into bigrams
+            #    #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
+            tempSentence1.append(token["form"].lower())
+            tempSentence2.append(token["form"].lower())
+            tempSentence3.append(token["form"].lower())
+            tempSentence4.append(token["form"].lower())
+            tempSentence5.append(token["form"].lower())
+            tempSentence6.append(token["form"].lower())
 
 
         #now adding eos and bos tags to the sentence
@@ -1912,26 +2304,33 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
         tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
         
-        #for storing values that will later have redistributed unigram probability
-        tempUnigramBackoffList1 = {}
-        tempUnigramBackoffList2 = {}
-        tempUnigramBackoffList3 = {}
-        tempUnigramBackoffList4 = {}
-        tempUnigramBackoffList5 = {}
-        tempUnigramBackoffList6 = {}
+        #for debugging
+        #print(tempBigram1)
         
         for wordPair in tempBigram1 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram1:
                 normalizingConstant = (series1[wordPair[0]])
                 tempProbability = (backedOffBigram1[wordPair])/(normalizingConstant)
+                #print("lang one bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 probSentenceGivenL1+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList1:
-                    tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[0]] / wordCount1)
+                if wordPair[1] in backedOffList1:
+                    if wordPair[0] in redistributedBigram1:
+                        tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[1]] / wordCount1)
+                    else:
+                        tempProbability = redistributedBigram1['<UNK>'] *( backedOffList1[wordPair[1]] / wordCount1)
                     probSentenceGivenL1+=math.log(tempProbability)
+                    #print("lang one backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang one bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList1:
                         tempUnigramBackoffList1[wordPair] += 1
@@ -1944,12 +2343,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series2[wordPair[0]])
                 tempProbability = (backedOffBigram2[wordPair])/(normalizingConstant)
                 probSentenceGivenL2+=math.log(tempProbability)
+                #print("lang two bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList2:
-                    tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[0]] / wordCount2)
+                if wordPair[1] in backedOffList2:
+                    if wordPair[0] in redistributedBigram2:
+                        tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[1]] / wordCount2)
+                    else:
+                        tempProbability = redistributedBigram2['<UNK>'] *( backedOffList2[wordPair[1]] / wordCount2)
                     probSentenceGivenL2+=math.log(tempProbability)
+                    #print("lang two backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang two bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList2:
                         tempUnigramBackoffList2[wordPair] += 1
@@ -1962,12 +2373,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series3[wordPair[0]])
                 tempProbability = (backedOffBigram3[wordPair])/(normalizingConstant)
                 probSentenceGivenL3+=math.log(tempProbability)
+                #print("lang three bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList3:
-                    tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[0]] / wordCount3)
+                if wordPair[1] in backedOffList3:
+                    if wordPair[0] in redistributedBigram3:
+                        tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[1]] / wordCount3)
+                    else:
+                        tempProbability = redistributedBigram3['<UNK>'] *( backedOffList3[wordPair[1]] / wordCount3)
                     probSentenceGivenL3+=math.log(tempProbability)
+                    #print("lang three backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang three bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList3:
                         tempUnigramBackoffList3[wordPair] += 1
@@ -1977,33 +2400,57 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         for wordPair in tempBigram4 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram4:
+                #print("lang four bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 normalizingConstant = (series4[wordPair[0]])
                 tempProbability = (backedOffBigram4[wordPair])/(normalizingConstant)
                 probSentenceGivenL4+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList4:
-                    tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[0]] / wordCount4)
+                if wordPair[1] in backedOffList4:
+                    if wordPair[0] in redistributedBigram4:
+                        tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[1]] / wordCount4)
+                    else:
+                        tempProbability = redistributedBigram4['<UNK>'] *( backedOffList4[wordPair[1]] / wordCount4)
                     probSentenceGivenL4+=math.log(tempProbability)
+                    #print("lang four backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang four bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList4:
                         tempUnigramBackoffList4[wordPair] += 1
                     else:
                         tempUnigramBackoffList4[wordPair] = 1
                 
-        for wordPair in tempBigram2 :
+        for wordPair in tempBigram5 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram5:
                 normalizingConstant = (series5[wordPair[0]])
                 tempProbability = (backedOffBigram5[wordPair])/(normalizingConstant)
                 probSentenceGivenL5+=math.log(tempProbability)
+                #print("lang five bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList5:
-                    tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[0]] / wordCount5)
+                if wordPair[1] in backedOffList5:
+                    if wordPair[0] in redistributedBigram5:
+                        tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[1]] / wordCount5)
+                    else:
+                        tempProbability = redistributedBigram5['<UNK>'] *( backedOffList5[wordPair[1]] / wordCount5)
                     probSentenceGivenL5+=math.log(tempProbability)
+                    #print("lang five backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang five bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList5:
                         tempUnigramBackoffList5[wordPair] += 1
@@ -2016,12 +2463,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series6[wordPair[0]])
                 tempProbability = (backedOffBigram6[wordPair])/(normalizingConstant)
                 probSentenceGivenL6+=math.log(tempProbability)
+                #print("lang six bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList6:
-                    tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[0]] / wordCount6)
+                if wordPair[1] in backedOffList6:
+                    if wordPair[0] in redistributedBigram6:
+                        tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[1]] / wordCount6)
+                    else:
+                        tempProbability = redistributedBigram6['<UNK>'] *( backedOffList6[wordPair[1]] / wordCount6)
                     probSentenceGivenL6+=math.log(tempProbability)
+                    #print("lang six backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang six bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList6:
                         tempUnigramBackoffList6[wordPair] += 1
@@ -2029,7 +2488,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                         tempUnigramBackoffList6[wordPair] = 1
         
         #redistribute the probabilities that had to be backed off twice.
-        print("Now redistributing unigram backoff as necessary.\n")
+        #print("Now redistributing unigram backoff as necessary.\n")
+        
         
         #First need to count number of oov types
         numOOVTypes1 = len(tempUnigramBackoffList1)
@@ -2038,6 +2498,13 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         numOOVTypes4 = len(tempUnigramBackoffList4)
         numOOVTypes5 = len(tempUnigramBackoffList5)
         numOOVTypes6 = len(tempUnigramBackoffList6)
+        
+        #print(numOOVTypes1)
+        #print(numOOVTypes2)
+        #print(numOOVTypes3)
+        #print(numOOVTypes4)
+        #print(numOOVTypes5)
+        #print(numOOVTypes6)
         
         #then need to get b/v values where V is the size of the total vocab of known and previously unknown newly encountered words
         #b is the probability mass set aside for redistribution
@@ -2051,54 +2518,58 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList1.items():
             if key[0] in redistributedBigram1:
-                tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
+                 tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram1['<UNK>']*distValueUnigram1)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL1+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList2.items():
+            #tempProbabilitySum = math.log(distValueUnigram2)
             if key[0] in redistributedBigram2:
                 tempProbabilitySum = value * math.log(redistributedBigram2[key[0]]*distValueUnigram2)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram2['<UNK>']*distValueUnigram2)
-            probSentenceGivenL2+=tempProbabilitySum
+            probSentenceGivenL2+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList3.items():
+            #tempProbabilitySum = math.log(distValueUnigram3)
             if key[0] in redistributedBigram3:
                 tempProbabilitySum = value * math.log(redistributedBigram3[key[0]]*distValueUnigram3)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram3['<UNK>']*distValueUnigram3)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL3+=(tempProbabilitySum)
             
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList4.items():
+            #tempProbabilitySum = math.log(distValueUnigram4)
             if key[0] in redistributedBigram4:
                 tempProbabilitySum = value * math.log(redistributedBigram4[key[0]]*distValueUnigram4)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram4['<UNK>']*distValueUnigram4)
-            probSentenceGivenL4+=tempProbabilitySum
+            probSentenceGivenL4+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList5.items():
+            #tempProbabilitySum = math.log(distValueUnigram5)
             if key[0] in redistributedBigram5:
                 tempProbabilitySum = value * math.log(redistributedBigram5[key[0]]*distValueUnigram5)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram5['<UNK>']*distValueUnigram5)
-            probSentenceGivenL5+=tempProbabilitySum
+            probSentenceGivenL5+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList6.items():
+            #tempProbabilitySum = math.log(distValueUnigram6)
             if key[0] in redistributedBigram6:
                 tempProbabilitySum = value * math.log(redistributedBigram6[key[0]]*distValueUnigram6)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram6['<UNK>']*distValueUnigram6)
-            probSentenceGivenL6+=tempProbabilitySum
+            probSentenceGivenL6+=(tempProbabilitySum)
         
-        
-        print("Now predicting language")
+        #print("Now predicting language\n")
         #predict which language it is using logs
         logProb1 = probSentenceGivenL1 + math.log(probLang1)
         logProb2 = probSentenceGivenL2 + math.log(probLang2)
@@ -2119,13 +2590,15 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         
         #find maximum of these log likelihoods and set that as the predicted language
         Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
+        #for debugging
+        #print(Keymax)
+        predictedLang.append(str(Keymax))
         
         #append the actual language this dev set is from to actual language list
         actualLang.append('Lang5')
         
         countDevLang5+=1
-        print("Done with %d sentences in dev set for Lang 5"%(countDevLang5))
+        #print("Done with %d sentences in dev set for Lang 5\n"%(countDevLang5))
         
         #resetting the temporary list of words per each sentence 
         tempSentence1 = []
@@ -2135,6 +2608,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempSentence5 = []
         tempSentence6 = []
         
+        #for debugging adding a break
+        #break
         
     tempSentence1 = []
     tempSentence2 = []
@@ -2144,30 +2619,42 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
     tempSentence6 = []
     
     en_dev5.close()
-    
+   
     #connlu parse and update bigram and unigram counts 
     for tokenlist in parse_incr(en_dev6):
+        
+        ##for debugging
+        #print(tokenlist)
+        
+        #for storing values that will later have redistributed unigram probability
+        tempUnigramBackoffList1 = {}
+        tempUnigramBackoffList2 = {}
+        tempUnigramBackoffList3 = {}
+        tempUnigramBackoffList4 = {}
+        tempUnigramBackoffList5 = {}
+        tempUnigramBackoffList6 = {}
+        
         for token in tokenlist:         
             #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
             #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
             #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
             # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
+            #if not (token["form"].lower()) in wordList :
+            #    tempSentence1.append('<UNK>')
+            #    tempSentence2.append('<UNK>')
+            #    tempSentence3.append('<UNK>')
+            #    tempSentence4.append('<UNK>')
+            #    tempSentence5.append('<UNK>')
+            #    tempSentence6.append('<UNK>')
+            #else:
+            #    ##adding to temporary sentence which will be parsed into bigrams
+            #    #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
+            tempSentence1.append(token["form"].lower())
+            tempSentence2.append(token["form"].lower())
+            tempSentence3.append(token["form"].lower())
+            tempSentence4.append(token["form"].lower())
+            tempSentence5.append(token["form"].lower())
+            tempSentence6.append(token["form"].lower())
 
 
         #now adding eos and bos tags to the sentence
@@ -2200,26 +2687,33 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
         tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
         
-        #for storing values that will later have redistributed unigram probability
-        tempUnigramBackoffList1 = {}
-        tempUnigramBackoffList2 = {}
-        tempUnigramBackoffList3 = {}
-        tempUnigramBackoffList4 = {}
-        tempUnigramBackoffList5 = {}
-        tempUnigramBackoffList6 = {}
+        #for debugging
+        #print(tempBigram1)
         
         for wordPair in tempBigram1 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram1:
                 normalizingConstant = (series1[wordPair[0]])
                 tempProbability = (backedOffBigram1[wordPair])/(normalizingConstant)
+                #print("lang one bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 probSentenceGivenL1+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList1:
-                    tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[0]] / wordCount1)
+                if wordPair[1] in backedOffList1:
+                    if wordPair[0] in redistributedBigram1:
+                        tempProbability = redistributedBigram1[wordPair[0]] *( backedOffList1[wordPair[1]] / wordCount1)
+                    else:
+                        tempProbability = redistributedBigram1['<UNK>'] *( backedOffList1[wordPair[1]] / wordCount1)
                     probSentenceGivenL1+=math.log(tempProbability)
+                    #print("lang one backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang one bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList1:
                         tempUnigramBackoffList1[wordPair] += 1
@@ -2232,12 +2726,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series2[wordPair[0]])
                 tempProbability = (backedOffBigram2[wordPair])/(normalizingConstant)
                 probSentenceGivenL2+=math.log(tempProbability)
+                #print("lang two bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList2:
-                    tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[0]] / wordCount2)
+                if wordPair[1] in backedOffList2:
+                    if wordPair[0] in redistributedBigram2:
+                        tempProbability = redistributedBigram2[wordPair[0]] *( backedOffList2[wordPair[1]] / wordCount2)
+                    else:
+                        tempProbability = redistributedBigram2['<UNK>'] *( backedOffList2[wordPair[1]] / wordCount2)
                     probSentenceGivenL2+=math.log(tempProbability)
+                    #print("lang two backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang two bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList2:
                         tempUnigramBackoffList2[wordPair] += 1
@@ -2250,12 +2756,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series3[wordPair[0]])
                 tempProbability = (backedOffBigram3[wordPair])/(normalizingConstant)
                 probSentenceGivenL3+=math.log(tempProbability)
+                #print("lang three bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList3:
-                    tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[0]] / wordCount3)
+                if wordPair[1] in backedOffList3:
+                    if wordPair[0] in redistributedBigram3:
+                        tempProbability = redistributedBigram3[wordPair[0]] *( backedOffList3[wordPair[1]] / wordCount3)
+                    else:
+                        tempProbability = redistributedBigram3['<UNK>'] *( backedOffList3[wordPair[1]] / wordCount3)
                     probSentenceGivenL3+=math.log(tempProbability)
+                    #print("lang three backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang three bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList3:
                         tempUnigramBackoffList3[wordPair] += 1
@@ -2265,33 +2783,57 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         for wordPair in tempBigram4 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram4:
+                #print("lang four bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
                 normalizingConstant = (series4[wordPair[0]])
                 tempProbability = (backedOffBigram4[wordPair])/(normalizingConstant)
                 probSentenceGivenL4+=math.log(tempProbability)
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList4:
-                    tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[0]] / wordCount4)
+                if wordPair[1] in backedOffList4:
+                    if wordPair[0] in redistributedBigram4:
+                        tempProbability = redistributedBigram4[wordPair[0]] *( backedOffList4[wordPair[1]] / wordCount4)
+                    else:
+                        tempProbability = redistributedBigram4['<UNK>'] *( backedOffList4[wordPair[1]] / wordCount4)
                     probSentenceGivenL4+=math.log(tempProbability)
+                    #print("lang four backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang four bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList4:
                         tempUnigramBackoffList4[wordPair] += 1
                     else:
                         tempUnigramBackoffList4[wordPair] = 1
                 
-        for wordPair in tempBigram2 :
+        for wordPair in tempBigram5 :
             #if c(x,y)>0 just count probability as c(x,y)-d2 / c(x)
             if wordPair in backedOffBigram5:
                 normalizingConstant = (series5[wordPair[0]])
                 tempProbability = (backedOffBigram5[wordPair])/(normalizingConstant)
                 probSentenceGivenL5+=math.log(tempProbability)
+                #print("lang five bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList5:
-                    tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[0]] / wordCount5)
+                if wordPair[1] in backedOffList5:
+                    if wordPair[0] in redistributedBigram5:
+                        tempProbability = redistributedBigram5[wordPair[0]] *( backedOffList5[wordPair[1]] / wordCount5)
+                    else:
+                        tempProbability = redistributedBigram5['<UNK>'] *( backedOffList5[wordPair[1]] / wordCount5)
                     probSentenceGivenL5+=math.log(tempProbability)
+                    #print("lang five backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang five bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList5:
                         tempUnigramBackoffList5[wordPair] += 1
@@ -2304,12 +2846,24 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                 normalizingConstant = (series6[wordPair[0]])
                 tempProbability = (backedOffBigram6[wordPair])/(normalizingConstant)
                 probSentenceGivenL6+=math.log(tempProbability)
+                #print("lang six bigram exists with probability of %f. The bigram is: " %tempProbability)
+                #print(wordPair)
+                #print("\n")
             else:
                 #otherwise check if c(x)>0 and if it is, count a(x) * (c(x)/ summation of c(v) across all V) as the probability  
-                if wordPair[0] in backedOffList6:
-                    tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[0]] / wordCount6)
+                if wordPair[1] in backedOffList6:
+                    if wordPair[0] in redistributedBigram6:
+                        tempProbability = redistributedBigram6[wordPair[0]] *( backedOffList6[wordPair[1]] / wordCount6)
+                    else:
+                        tempProbability = redistributedBigram6['<UNK>'] *( backedOffList6[wordPair[1]] / wordCount6)
                     probSentenceGivenL6+=math.log(tempProbability)
+                    #print("lang six backed off unigram exists with probability of %f. The bigram is: " %tempProbability)
+                    #print(wordPair)
+                    #print("\n")
                 else:
+                    #print("lang six bigram does not exist and backed off twice. The bigram is: ")
+                    #print(wordPair)
+                    #print("\n")
                     #otherwise add the word pair as a key to a list of double backed off values
                     if wordPair in tempUnigramBackoffList6:
                         tempUnigramBackoffList6[wordPair] += 1
@@ -2317,7 +2871,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
                         tempUnigramBackoffList6[wordPair] = 1
         
         #redistribute the probabilities that had to be backed off twice.
-        print("Now redistributing unigram backoff as necessary.\n")
+        #print("Now redistributing unigram backoff as necessary.\n")
+        
         
         #First need to count number of oov types
         numOOVTypes1 = len(tempUnigramBackoffList1)
@@ -2326,6 +2881,13 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         numOOVTypes4 = len(tempUnigramBackoffList4)
         numOOVTypes5 = len(tempUnigramBackoffList5)
         numOOVTypes6 = len(tempUnigramBackoffList6)
+        
+        #print(numOOVTypes1)
+        #print(numOOVTypes2)
+        #print(numOOVTypes3)
+        #print(numOOVTypes4)
+        #print(numOOVTypes5)
+        #print(numOOVTypes6)
         
         #then need to get b/v values where V is the size of the total vocab of known and previously unknown newly encountered words
         #b is the probability mass set aside for redistribution
@@ -2339,53 +2901,58 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList1.items():
             if key[0] in redistributedBigram1:
-                tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
+                 tempProbabilitySum = value * math.log(redistributedBigram1[key[0]]*distValueUnigram1)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram1['<UNK>']*distValueUnigram1)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL1+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList2.items():
+            #tempProbabilitySum = math.log(distValueUnigram2)
             if key[0] in redistributedBigram2:
                 tempProbabilitySum = value * math.log(redistributedBigram2[key[0]]*distValueUnigram2)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram2['<UNK>']*distValueUnigram2)
-            probSentenceGivenL2+=tempProbabilitySum
+            probSentenceGivenL2+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList3.items():
+            #tempProbabilitySum = math.log(distValueUnigram3)
             if key[0] in redistributedBigram3:
                 tempProbabilitySum = value * math.log(redistributedBigram3[key[0]]*distValueUnigram3)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram3['<UNK>']*distValueUnigram3)
-            probSentenceGivenL1+=tempProbabilitySum
+            probSentenceGivenL3+=(tempProbabilitySum)
             
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList4.items():
+            #tempProbabilitySum = math.log(distValueUnigram4)
             if key[0] in redistributedBigram4:
                 tempProbabilitySum = value * math.log(redistributedBigram4[key[0]]*distValueUnigram4)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram4['<UNK>']*distValueUnigram4)
-            probSentenceGivenL4+=tempProbabilitySum
+            probSentenceGivenL4+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList5.items():
+            #tempProbabilitySum = math.log(distValueUnigram5)
             if key[0] in redistributedBigram5:
                 tempProbabilitySum = value * math.log(redistributedBigram5[key[0]]*distValueUnigram5)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram5['<UNK>']*distValueUnigram5)
-            probSentenceGivenL5+=tempProbabilitySum
+            probSentenceGivenL5+=(tempProbabilitySum)
             
         #Now multiply this b/v value by its a(x) and add its log linear probability up as necessary per each occurence/count of double backed off bigram
         for key, value in tempUnigramBackoffList6.items():
+            #tempProbabilitySum = math.log(distValueUnigram6)
             if key[0] in redistributedBigram6:
                 tempProbabilitySum = value * math.log(redistributedBigram6[key[0]]*distValueUnigram6)
             else:
                 tempProbabilitySum = value * math.log(redistributedBigram6['<UNK>']*distValueUnigram6)
-            probSentenceGivenL6+=tempProbabilitySum
+            probSentenceGivenL6+=(tempProbabilitySum)
         
-        print("Now predicting language")
+        #print("Now predicting language\n")
         #predict which language it is using logs
         logProb1 = probSentenceGivenL1 + math.log(probLang1)
         logProb2 = probSentenceGivenL2 + math.log(probLang2)
@@ -2406,13 +2973,15 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         
         #find maximum of these log likelihoods and set that as the predicted language
         Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
+        #for debugging
+        #print(Keymax)
+        predictedLang.append(str(Keymax))
         
         #append the actual language this dev set is from to actual language list
         actualLang.append('Lang6')
         
         countDevLang6+=1
-        print("Done with %d sentences in dev set for Lang 6"%(countDevLang6))
+        #print("Done with %d sentences in dev set for Lang 6\n"%(countDevLang6))
         
         #resetting the temporary list of words per each sentence 
         tempSentence1 = []
@@ -2422,6 +2991,8 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
         tempSentence5 = []
         tempSentence6 = []
         
+        #for debugging adding a break
+        #break
         
     tempSentence1 = []
     tempSentence2 = []
@@ -2431,938 +3002,25 @@ def bigramLaplace(pathToTrainLang1, pathToTrainLang2, pathToTrainLang3, pathToTr
     tempSentence6 = []
     
     en_dev6.close()
-    """
-    """
-    #connlu parse and update bigram and unigram counts 
-    for tokenlist in parse_incr(en_dev2):
-        for token in tokenlist:         
-            #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
-            #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
-            #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
-            # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
-
-
-        #now adding eos and bos tags to the sentence
-        tempSentence1.insert(0, "<BOS>")
-        tempSentence1.append("<EOS>")
-        tempSentence2.insert(0, "<BOS>")
-        tempSentence2.append("<EOS>")
-        tempSentence3.insert(0, "<BOS>")
-        tempSentence3.append("<EOS>")
-        tempSentence4.insert(0, "<BOS>")
-        tempSentence4.append("<EOS>")
-        tempSentence5.insert(0, "<BOS>")
-        tempSentence5.append("<EOS>")
-        tempSentence6.insert(0, "<BOS>")
-        tempSentence6.append("<EOS>")
-        
-        #this is math.log(1) since I am adding log probabilities to avoid multiplication
-        probSentenceGivenL1 = 0
-        probSentenceGivenL2 = 0
-        probSentenceGivenL3 = 0
-        probSentenceGivenL4 = 0
-        probSentenceGivenL5 = 0
-        probSentenceGivenL6 = 0
-        
-        tempBigram1 = zip(tempSentence1, islice(tempSentence1, 1, None))
-        tempBigram2 = zip(tempSentence2, islice(tempSentence2, 1, None))
-        tempBigram3 = zip(tempSentence3, islice(tempSentence3, 1, None))
-        tempBigram4 = zip(tempSentence4, islice(tempSentence4, 1, None))
-        tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
-        tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
-        
-        for wordPair in tempBigram1 :
-            if wordPair in bigramCounts1:
-                normalizingConstant = (series1[wordPair[0]]+V)
-                tempProbability = (bigramCounts1[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL1+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series1:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series1[wordPair[0]]+V)
-                ##normalizingConstant = (series1[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL1+=(math.log(tempProbability))
-                    
-        for wordPair in tempBigram2 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts2:
-                normalizingConstant = (series2[wordPair[0]]+V)
-                tempProbability = (bigramCounts2[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL2+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series2:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series2[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL2+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram3 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts3:
-                normalizingConstant = (series3[wordPair[0]]+V)
-                tempProbability = (bigramCounts3[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL3+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series3:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series3[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL3+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram4 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts4:
-                normalizingConstant = (series4[wordPair[0]]+V)
-                tempProbability = (bigramCounts4[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL4+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series4:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series4[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL4+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram5 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts5:
-                normalizingConstant = (series5[wordPair[0]]+V)
-                tempProbability = (bigramCounts5[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL5+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series5:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series5[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL5+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram6 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts6:
-                normalizingConstant = (series6[wordPair[0]]+V)
-                tempProbability = (bigramCounts6[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL6+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series6:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series6[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL6+=(math.log(tempProbability))
-        
-        
-        
-        #predict which language it is using logs
-        logProb1 = probSentenceGivenL1 + math.log(probLang1)
-        logProb2 = probSentenceGivenL2 + math.log(probLang2)
-        logProb3 = probSentenceGivenL3 + math.log(probLang3)
-        logProb4 = probSentenceGivenL4 + math.log(probLang4)
-        logProb5 = probSentenceGivenL5 + math.log(probLang5)
-        logProb6 = probSentenceGivenL6 + math.log(probLang6)
-        
-        #store probabilities in dictionary with respective languages as keys
-        probDict = {
-            "Lang1": logProb1, 
-            "Lang2": logProb2, 
-            "Lang3": logProb3, 
-            "Lang4": logProb4, 
-            "Lang5": logProb5, 
-            "Lang6": logProb6
-            }
-        
-        #find maximum of these log likelihoods and set that as the predicted language
-        Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
-        
-        #append the actual language this dev set is from to actual language list
-        actualLang.append('Lang2')
-        
-        countDevLang2+=1
-        print("Done with %d sentences in dev set for Lang 2"%(countDevLang2))
-        
-        #resetting the temporary list of words per each sentence 
-        tempSentence1 = []
-        tempSentence2 = []
-        tempSentence3 = []
-        tempSentence4 = []
-        tempSentence5 = []
-        tempSentence6 = []
-        
-        
-    tempSentence1 = []
-    tempSentence2 = []
-    tempSentence3 = []
-    tempSentence4 = []
-    tempSentence5 = []
-    tempSentence6 = []
+   
+    #for debugging
+    #countRight = 0
+    #countWrong = 0
+    ##for debugging
+    #for i in range(1,len(predictedLang)):
+    #    if(predictedLang[i] == actualLang[i]):
+    #        countRight+=1
+    #    else:
+    #        countWrong+=1
+    #        
+    #print("count right is: ",countRight)
+    #print("count wrong is: ",countWrong)
     
-    en_dev2.close()
+    #print("legnth of the two sets is")
+    #print(len(predictedLang))
+    #print(len(actualLang))
+    #print("\n")
     
-    #connlu parse and update bigram and unigram counts 
-    for tokenlist in parse_incr(en_dev3):
-        for token in tokenlist:         
-            #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
-            #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
-            #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
-            # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
-
-
-        #now adding eos and bos tags to the sentence
-        tempSentence1.insert(0, "<BOS>")
-        tempSentence1.append("<EOS>")
-        tempSentence2.insert(0, "<BOS>")
-        tempSentence2.append("<EOS>")
-        tempSentence3.insert(0, "<BOS>")
-        tempSentence3.append("<EOS>")
-        tempSentence4.insert(0, "<BOS>")
-        tempSentence4.append("<EOS>")
-        tempSentence5.insert(0, "<BOS>")
-        tempSentence5.append("<EOS>")
-        tempSentence6.insert(0, "<BOS>")
-        tempSentence6.append("<EOS>")
-        
-        #this is math.log(1) since I am adding log probabilities to avoid multiplication
-        probSentenceGivenL1 = 0
-        probSentenceGivenL2 = 0
-        probSentenceGivenL3 = 0
-        probSentenceGivenL4 = 0
-        probSentenceGivenL5 = 0
-        probSentenceGivenL6 = 0
-        
-        tempBigram1 = zip(tempSentence1, islice(tempSentence1, 1, None))
-        tempBigram2 = zip(tempSentence2, islice(tempSentence2, 1, None))
-        tempBigram3 = zip(tempSentence3, islice(tempSentence3, 1, None))
-        tempBigram4 = zip(tempSentence4, islice(tempSentence4, 1, None))
-        tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
-        tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
-        
-        for wordPair in tempBigram1 :
-            if wordPair in bigramCounts1:
-                normalizingConstant = (series1[wordPair[0]]+V)
-                tempProbability = (bigramCounts1[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL1+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series1:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series1[wordPair[0]]+V)
-                ##normalizingConstant = (series1[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL1+=(math.log(tempProbability))
-                    
-        for wordPair in tempBigram2 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts2:
-                normalizingConstant = (series2[wordPair[0]]+V)
-                tempProbability = (bigramCounts2[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL2+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series2:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series2[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL2+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram3 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts3:
-                normalizingConstant = (series3[wordPair[0]]+V)
-                tempProbability = (bigramCounts3[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL3+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series3:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series3[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL3+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram4 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts4:
-                normalizingConstant = (series4[wordPair[0]]+V)
-                tempProbability = (bigramCounts4[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL4+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series4:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series4[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL4+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram5 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts5:
-                normalizingConstant = (series5[wordPair[0]]+V)
-                tempProbability = (bigramCounts5[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL5+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series5:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series5[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL5+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram6 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts6:
-                normalizingConstant = (series6[wordPair[0]]+V)
-                tempProbability = (bigramCounts6[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL6+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series6:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series6[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL6+=(math.log(tempProbability))
-        
-        
-        
-        #predict which language it is using logs
-        logProb1 = probSentenceGivenL1 + math.log(probLang1)
-        logProb2 = probSentenceGivenL2 + math.log(probLang2)
-        logProb3 = probSentenceGivenL3 + math.log(probLang3)
-        logProb4 = probSentenceGivenL4 + math.log(probLang4)
-        logProb5 = probSentenceGivenL5 + math.log(probLang5)
-        logProb6 = probSentenceGivenL6 + math.log(probLang6)
-        
-        #store probabilities in dictionary with respective languages as keys
-        probDict = {
-            "Lang1": logProb1, 
-            "Lang2": logProb2, 
-            "Lang3": logProb3, 
-            "Lang4": logProb4, 
-            "Lang5": logProb5, 
-            "Lang6": logProb6
-        }
-        
-        #find maximum of these log likelihoods and set that as the predicted language
-        Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
-        
-        #append the actual language this dev set is from to actual language list
-        actualLang.append('Lang3')
-        
-        countDevLang3+=1
-        print("Done with %d sentences in dev set for Lang 3"%(countDevLang3))
-        
-        #resetting the temporary list of words per each sentence 
-        tempSentence1 = []
-        tempSentence2 = []
-        tempSentence3 = []
-        tempSentence4 = []
-        tempSentence5 = []
-        tempSentence6 = []
-        
-        
-    tempSentence1 = []
-    tempSentence2 = []
-    tempSentence3 = []
-    tempSentence4 = []
-    tempSentence5 = []
-    tempSentence6 = []
-    
-    en_dev3.close()
-    
-    #connlu parse and update bigram and unigram counts 
-    for tokenlist in parse_incr(en_dev4):
-        for token in tokenlist:         
-            #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
-            #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
-            #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
-            # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
-
-
-        #now adding eos and bos tags to the sentence
-        tempSentence1.insert(0, "<BOS>")
-        tempSentence1.append("<EOS>")
-        tempSentence2.insert(0, "<BOS>")
-        tempSentence2.append("<EOS>")
-        tempSentence3.insert(0, "<BOS>")
-        tempSentence3.append("<EOS>")
-        tempSentence4.insert(0, "<BOS>")
-        tempSentence4.append("<EOS>")
-        tempSentence5.insert(0, "<BOS>")
-        tempSentence5.append("<EOS>")
-        tempSentence6.insert(0, "<BOS>")
-        tempSentence6.append("<EOS>")
-        
-        #this is math.log(1) since I am adding log probabilities to avoid multiplication
-        probSentenceGivenL1 = 0
-        probSentenceGivenL2 = 0
-        probSentenceGivenL3 = 0
-        probSentenceGivenL4 = 0
-        probSentenceGivenL5 = 0
-        probSentenceGivenL6 = 0
-        
-        tempBigram1 = zip(tempSentence1, islice(tempSentence1, 1, None))
-        tempBigram2 = zip(tempSentence2, islice(tempSentence2, 1, None))
-        tempBigram3 = zip(tempSentence3, islice(tempSentence3, 1, None))
-        tempBigram4 = zip(tempSentence4, islice(tempSentence4, 1, None))
-        tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
-        tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
-        
-        for wordPair in tempBigram1 :
-            if wordPair in bigramCounts1:
-                normalizingConstant = (series1[wordPair[0]]+V)
-                tempProbability = (bigramCounts1[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL1+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series1:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series1[wordPair[0]]+V)
-                ##normalizingConstant = (series1[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL1+=(math.log(tempProbability))
-                    
-        for wordPair in tempBigram2 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts2:
-                normalizingConstant = (series2[wordPair[0]]+V)
-                tempProbability = (bigramCounts2[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL2+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series2:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series2[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL2+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram3 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts3:
-                normalizingConstant = (series3[wordPair[0]]+V)
-                tempProbability = (bigramCounts3[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL3+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series3:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series3[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL3+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram4 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts4:
-                normalizingConstant = (series4[wordPair[0]]+V)
-                tempProbability = (bigramCounts4[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL4+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series4:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series4[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL4+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram5 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts5:
-                normalizingConstant = (series5[wordPair[0]]+V)
-                tempProbability = (bigramCounts5[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL5+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series5:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series5[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL5+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram6 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts6:
-                normalizingConstant = (series6[wordPair[0]]+V)
-                tempProbability = (bigramCounts6[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL6+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series6:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series6[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL6+=(math.log(tempProbability))
-        
-        
-        
-        #predict which language it is using logs
-        logProb1 = probSentenceGivenL1 + math.log(probLang1)
-        logProb2 = probSentenceGivenL2 + math.log(probLang2)
-        logProb3 = probSentenceGivenL3 + math.log(probLang3)
-        logProb4 = probSentenceGivenL4 + math.log(probLang4)
-        logProb5 = probSentenceGivenL5 + math.log(probLang5)
-        logProb6 = probSentenceGivenL6 + math.log(probLang6)
-        
-        #store probabilities in dictionary with respective languages as keys
-        probDict = {
-            "Lang1": logProb1, 
-            "Lang2": logProb2, 
-            "Lang3": logProb3, 
-            "Lang4": logProb4, 
-            "Lang5": logProb5, 
-            "Lang6": logProb6
-            }
-        
-        #find maximum of these log likelihoods and set that as the predicted language
-        Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
-        
-        #append the actual language this dev set is from to actual language list
-        actualLang.append('Lang4')
-        
-        countDevLang4+=1
-        print("Done with %d sentences in dev set for Lang 4"%(countDevLang4))
-        
-        #resetting the temporary list of words per each sentence 
-        tempSentence1 = []
-        tempSentence2 = []
-        tempSentence3 = []
-        tempSentence4 = []
-        tempSentence5 = []
-        tempSentence6 = []
-        
-        
-    tempSentence1 = []
-    tempSentence2 = []
-    tempSentence3 = []
-    tempSentence4 = []
-    tempSentence5 = []
-    tempSentence6 = []
-    
-    en_dev4.close()
-    
-    #connlu parse and update bigram and unigram counts 
-    for tokenlist in parse_incr(en_dev5):
-        for token in tokenlist:         
-            #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
-            #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
-            #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
-            # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
-
-
-        #now adding eos and bos tags to the sentence
-        tempSentence1.insert(0, "<BOS>")
-        tempSentence1.append("<EOS>")
-        tempSentence2.insert(0, "<BOS>")
-        tempSentence2.append("<EOS>")
-        tempSentence3.insert(0, "<BOS>")
-        tempSentence3.append("<EOS>")
-        tempSentence4.insert(0, "<BOS>")
-        tempSentence4.append("<EOS>")
-        tempSentence5.insert(0, "<BOS>")
-        tempSentence5.append("<EOS>")
-        tempSentence6.insert(0, "<BOS>")
-        tempSentence6.append("<EOS>")
-        
-        #this is math.log(1) since I am adding log probabilities to avoid multiplication
-        probSentenceGivenL1 = 0
-        probSentenceGivenL2 = 0
-        probSentenceGivenL3 = 0
-        probSentenceGivenL4 = 0
-        probSentenceGivenL5 = 0
-        probSentenceGivenL6 = 0
-        
-        tempBigram1 = zip(tempSentence1, islice(tempSentence1, 1, None))
-        tempBigram2 = zip(tempSentence2, islice(tempSentence2, 1, None))
-        tempBigram3 = zip(tempSentence3, islice(tempSentence3, 1, None))
-        tempBigram4 = zip(tempSentence4, islice(tempSentence4, 1, None))
-        tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
-        tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
-        
-        for wordPair in tempBigram1 :
-            if wordPair in bigramCounts1:
-                normalizingConstant = (series1[wordPair[0]]+V)
-                tempProbability = (bigramCounts1[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL1+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series1:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series1[wordPair[0]]+V)
-                ##normalizingConstant = (series1[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL1+=(math.log(tempProbability))
-                    
-        for wordPair in tempBigram2 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts2:
-                normalizingConstant = (series2[wordPair[0]]+V)
-                tempProbability = (bigramCounts2[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL2+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series2:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series2[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL2+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram3 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts3:
-                normalizingConstant = (series3[wordPair[0]]+V)
-                tempProbability = (bigramCounts3[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL3+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series3:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series3[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL3+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram4 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts4:
-                normalizingConstant = (series4[wordPair[0]]+V)
-                tempProbability = (bigramCounts4[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL4+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series4:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series4[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL4+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram5 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts5:
-                normalizingConstant = (series5[wordPair[0]]+V)
-                tempProbability = (bigramCounts5[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL5+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series5:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series5[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL5+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram6 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts6:
-                normalizingConstant = (series6[wordPair[0]]+V)
-                tempProbability = (bigramCounts6[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL6+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series6:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series6[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL6+=(math.log(tempProbability))
-        
-        
-        
-        #predict which language it is using logs
-        logProb1 = probSentenceGivenL1 + math.log(probLang1)
-        logProb2 = probSentenceGivenL2 + math.log(probLang2)
-        logProb3 = probSentenceGivenL3 + math.log(probLang3)
-        logProb4 = probSentenceGivenL4 + math.log(probLang4)
-        logProb5 = probSentenceGivenL5 + math.log(probLang5)
-        logProb6 = probSentenceGivenL6 + math.log(probLang6)
-        
-        #store probabilities in dictionary with respective languages as keys
-        probDict = {
-            "Lang1": logProb1, 
-            "Lang2": logProb2, 
-            "Lang3": logProb3, 
-            "Lang4": logProb4, 
-            "Lang5": logProb5, 
-            "Lang6": logProb6
-            }
-        
-        #find maximum of these log likelihoods and set that as the predicted language
-        Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
-        
-        #append the actual language this dev set is from to actual language list
-        actualLang.append('Lang5')
-        
-        countDevLang5+=1
-        print("Done with %d sentences in dev set for Lang 5"%(countDevLang5))
-        
-        #resetting the temporary list of words per each sentence 
-        tempSentence1 = []
-        tempSentence2 = []
-        tempSentence3 = []
-        tempSentence4 = []
-        tempSentence5 = []
-        tempSentence6 = []
-        
-        
-    tempSentence1 = []
-    tempSentence2 = []
-    tempSentence3 = []
-    tempSentence4 = []
-    tempSentence5 = []
-    tempSentence6 = []
-    
-    en_dev5.close()
-    
-    #connlu parse and update bigram and unigram counts 
-    for tokenlist in parse_incr(en_dev6):
-        for token in tokenlist:         
-            #If sentence is in entire vocab from all languages, add the word to the sentence. Otherwise add the unknown token to the sentence.
-            #Regardless, if the bigram doesn't exist in a specific language one will have laplace + 0 bigram count /unigram count+ laplace + V. 
-            #If the unigram doesn't exist, one will have laplace + 0 bigram count / laplace + 0 + V. If the bigram exists one instead has bigram count+laplace
-            # divided by unigram count + laplace + V
-            if not (token["form"].lower()) in wordList :
-                tempSentence1.append('<UNK>')
-                tempSentence2.append('<UNK>')
-                tempSentence3.append('<UNK>')
-                tempSentence4.append('<UNK>')
-                tempSentence5.append('<UNK>')
-                tempSentence6.append('<UNK>')
-            else:
-                ##adding to temporary sentence which will be parsed into bigrams
-                #making it lower case as a means of preprocessing. words of different case but same spelling are the same type for my purposes
-                tempSentence1.append(token["form"].lower())
-                tempSentence2.append(token["form"].lower())
-                tempSentence3.append(token["form"].lower())
-                tempSentence4.append(token["form"].lower())
-                tempSentence5.append(token["form"].lower())
-                tempSentence6.append(token["form"].lower())
-
-
-        #now adding eos and bos tags to the sentence
-        tempSentence1.insert(0, "<BOS>")
-        tempSentence1.append("<EOS>")
-        tempSentence2.insert(0, "<BOS>")
-        tempSentence2.append("<EOS>")
-        tempSentence3.insert(0, "<BOS>")
-        tempSentence3.append("<EOS>")
-        tempSentence4.insert(0, "<BOS>")
-        tempSentence4.append("<EOS>")
-        tempSentence5.insert(0, "<BOS>")
-        tempSentence5.append("<EOS>")
-        tempSentence6.insert(0, "<BOS>")
-        tempSentence6.append("<EOS>")
-        
-        #this is math.log(1) since I am adding log probabilities to avoid multiplication
-        probSentenceGivenL1 = 0
-        probSentenceGivenL2 = 0
-        probSentenceGivenL3 = 0
-        probSentenceGivenL4 = 0
-        probSentenceGivenL5 = 0
-        probSentenceGivenL6 = 0
-        
-        tempBigram1 = zip(tempSentence1, islice(tempSentence1, 1, None))
-        tempBigram2 = zip(tempSentence2, islice(tempSentence2, 1, None))
-        tempBigram3 = zip(tempSentence3, islice(tempSentence3, 1, None))
-        tempBigram4 = zip(tempSentence4, islice(tempSentence4, 1, None))
-        tempBigram5 = zip(tempSentence5, islice(tempSentence5, 1, None))
-        tempBigram6 = zip(tempSentence6, islice(tempSentence6, 1, None))
-        
-        for wordPair in tempBigram1 :
-            if wordPair in bigramCounts1:
-                normalizingConstant = (series1[wordPair[0]]+V)
-                tempProbability = (bigramCounts1[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL1+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series1:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series1[wordPair[0]]+V)
-                ##normalizingConstant = (series1[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL1+=(math.log(tempProbability))
-                    
-        for wordPair in tempBigram2 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts2:
-                normalizingConstant = (series2[wordPair[0]]+V)
-                tempProbability = (bigramCounts2[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL2+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series2:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series2[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL2+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram3 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts3:
-                normalizingConstant = (series3[wordPair[0]]+V)
-                tempProbability = (bigramCounts3[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL3+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series3:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series3[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL3+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram4 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts4:
-                normalizingConstant = (series4[wordPair[0]]+V)
-                tempProbability = (bigramCounts4[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL4+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series4:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series4[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL4+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram5 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts5:
-                normalizingConstant = (series5[wordPair[0]]+V)
-                tempProbability = (bigramCounts5[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL5+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series5:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series5[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL5+=(math.log(tempProbability))
-                
-        for wordPair in tempBigram6 :
-            #####changing to use dictionary
-            if wordPair in bigramCounts6:
-                normalizingConstant = (series6[wordPair[0]]+V)
-                tempProbability = (bigramCounts6[wordPair]+laplace)/(normalizingConstant)
-                probSentenceGivenL6+=math.log(tempProbability)
-            else:
-                if not wordPair[0] in series6:
-                    normalizingConstant = laplace + V
-                else:
-                    normalizingConstant = (series6[wordPair[0]]+V)
-                tempProbability = (laplace)/(normalizingConstant)
-                probSentenceGivenL6+=(math.log(tempProbability))
-        
-        
-        
-        #predict which language it is using logs
-        logProb1 = probSentenceGivenL1 + math.log(probLang1)
-        logProb2 = probSentenceGivenL2 + math.log(probLang2)
-        logProb3 = probSentenceGivenL3 + math.log(probLang3)
-        logProb4 = probSentenceGivenL4 + math.log(probLang4)
-        logProb5 = probSentenceGivenL5 + math.log(probLang5)
-        logProb6 = probSentenceGivenL6 + math.log(probLang6)
-        
-        #store probabilities in dictionary with respective languages as keys
-        probDict = {
-            "Lang1": logProb1, 
-            "Lang2": logProb2, 
-            "Lang3": logProb3, 
-            "Lang4": logProb4, 
-            "Lang5": logProb5, 
-            "Lang6": logProb6
-            }
-        
-        #find maximum of these log likelihoods and set that as the predicted language
-        Keymax = max(probDict, key=probDict.get)
-        predictedLang.append(Keymax)
-        
-        #append the actual language this dev set is from to actual language list
-        actualLang.append('Lang6')
-        
-        countDevLang6+=1
-        print("Done with %d sentences in dev set for Lang 6"%(countDevLang6))
-        
-        #resetting the temporary list of words per each sentence 
-        tempSentence1 = []
-        tempSentence2 = []
-        tempSentence3 = []
-        tempSentence4 = []
-        tempSentence5 = []
-        tempSentence6 = []
-        
-        
-    tempSentence1 = []
-    tempSentence2 = []
-    tempSentence3 = []
-    tempSentence4 = []
-    tempSentence5 = []
-    tempSentence6 = []
-    
-    en_dev6.close() 
-    """
     
     print("Now calculating precision recall and f1 scores\n")
     
