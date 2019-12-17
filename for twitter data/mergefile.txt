@@ -513,7 +513,6 @@
 ["485500762324496384","http://t.co/fyhoJrFE0B"]
 ["485501785033801728","RESULT IN BRASILIA: #ARG 1-0 #BEL #ARGBEL #WorldCup QUARTER-FINAL #joinin - http://t.co/g3YaeGr2Qd\n#fifa2014 #FIFA http://t.co/8uHsQhSlPn"]
 ["485501831406026752","http://t.co/dekBhsovbm"]
-["485502053376999424","["]
 ["485502168318111744","Pablo boqueteiraa"]
 ["483943410563182593","http://t.co/Pvatcis4E8"]
 ["485502375222734848","#1DPicsNiall http://t.co/jr34UaXLfM"]
@@ -5654,4 +5653,3 @@
 ["494927359171371010","http://t.co/j4u9S770PA"]
 ["494927402364329985","@PabloNorthia MIRA DM!!!🙏🙏💕"]
 ["494928511527047168","@FLOPEIRO eu"]
-

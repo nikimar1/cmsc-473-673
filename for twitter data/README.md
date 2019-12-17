@@ -15,3 +15,12 @@ https://blog.twitter.com/engineering/en_us/a/2015/evaluating-language-identifica
 ##### This is useful for manually checking if tweets are bilingual or not. Url below:
 
 twitter.com/anyuser/status/ "id" 
+
+##### Note that we had to remove some items from the merge file manually such as a tweet "[" which broke our regex
+##### as well as the character at the file end. However, this file can print out all of the tweet data parsing it out.
+##### We will later be using this to procure a dev set after we have manually pruned the file for only spanish english bilingual tweets.
+##### Afterwards, we will modify some of our algorithms for language classification to take in the same connlu training data as before
+##### but to afterwards  classify the two most likely languages from the parsed spanish-english .txt file corpora we create. 
+
+#### For now, here is the command to print all the merged and formatted tweets prior to parsing out non bilingual ones.
+python mergefile_modify_data.py
