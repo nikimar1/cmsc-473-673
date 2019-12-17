@@ -1,0 +1,1 @@
+["491779751195852800","03:00:03 UTC;\nTemp 22,0ºC [Max 24,2ºC Min 22,0ºC];\nViento 0 km/h ---, Vel.Max. 0 Km/h;\nPres. 1010,40 Hpa;\nHumedad 38%;\nLluvia 0,0 mm."]
