@@ -7,5 +7,10 @@ https://blog.twitter.com/engineering/en_us/a/2015/evaluating-language-identifica
 
 ##### This time we will be manually looking at spanish identified tweets to see if any of them contain english and are therefore bilingual
 
-#### For now, here is the command to print all the merged and formatted tweets prior to parsing out non bilingual ones.
+#### Everything is run in the same way as the unknown twitter data parse. We simply look at different labels in our code.
+
+#### In order to create the out.csv file from merged twitter es data, run the following.
 python mergefile_modify_data.py
+
+###### To later manually pick out bilingual spanglish tweets, we renamed this file and moved it to the folder "forFindingBilingualSpanglish"
+###### Consult that folder to see how we generated our corpora manually after all of this data processing. 
