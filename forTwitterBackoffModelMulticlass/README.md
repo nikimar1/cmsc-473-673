@@ -1,9 +1,6 @@
 # For Backoff Multilanguage classifier
 
-#### If you create your own data using our utilities to parse out Spanish English tweets or procure some external bilingual corpora with csv comma seperated words and line seperated sentences, you will be able to run using those csv files for the model. Note that our utilities create a lot of empty comma seperated values after cleaning data.
-#### Delete those extra commas if possible as otherwise blanks are more likely to be identified as Dutch due to our training data. Otherwise, a higher quality corpora
-#### might work better with our model. For a tiny 7 sentence corpora of high quality spanglish sentences, we were able to get very accurate results. For two lower quality 
-#### corpora we had greater difficulties. 
+#### If you create your own data using our utilities to parse out Spanish English tweets or procure some external bilingual corpora with csv comma seperated words and line seperated sentences, you will be able to run using those csv files for the model. Note that our utilities create a lot of empty comma seperated values after cleaning data. Delete those extra commas if possible as otherwise blanks are more likely to be identified as Dutch due to our training data. Otherwise, a higher quality corpora might work better with our model. For a tiny 7 sentence corpora of high quality spanglish sentences, we were able to get very accurate results. For two lower quality corpora we had greater difficulties. 
 
 #### Note, our data sets that you can use are as follows. 
 biList.csv was a dataset one of us chose while first extracting data. It was picked randomly but with a high degree of selectiveness for long sentences
