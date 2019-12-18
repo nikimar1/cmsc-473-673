@@ -3,6 +3,7 @@ import fnmatch
 #had to pip install wordsegment
 from wordsegment import load, segment
 from wordsegment import clean
+import csv
 
 def main():
     #list for sentences
@@ -43,10 +44,15 @@ def main():
         #add resultant list of words to cleaned sentence structure as well as resetting container for word lists
         cleanedSentences.append(cleanedWords)
         cleanedWords= []
-              
+    
+    #if you with to output them to a csv instead
+    with open("out.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(cleanedSentences)
+    
     #iterate over and print newly cleaned up sentences
-    for sentenceClean in cleanedSentences:
-        print (sentenceClean)
+    #for sentenceClean in cleanedSentences:
+    #    print (sentenceClean)
 
 if __name__ == '__main__':
     main()
