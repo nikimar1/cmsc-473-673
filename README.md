@@ -138,14 +138,30 @@ combinedCleaned.csv is a dataset that merges the two datasets above while also r
 a very high quality dataset because some sentences contain garbage url's or other things. We did not want to corrupt our results by manually editing data. This is the
 corpora which achieved .425 recall and precision (although to use recall and precision is redundant when one is looking at supposedly only true results)
 
-#### Csv file cleaning
+##### Csv file cleaning
 We have to note that the csv files genreated by our programs and cleaned up by the word segment utility ended up having many empty 
 spaces where emojis or other things were removed. We could easily have created a utility for removing any cases of more than one comma 
 in a row to fix this but we manually cleaned out the blanks from our csv files because they were frankly small datasets and did not warrant creating a tool for. 
 
 
-###### Mutliclass functionality
+##### Mutliclass functionality
 This will generate precision recall and f1 scores after training our classifier model and then evaluating its top two language scores
 If the top two scores are Spanish and English in any order, it will output that multiclass but otherwise it will output other. 
 This is because of the limited devset and our ability to only test for this. Regardless, Spanish English bilingual or not will be the threshold
 for evaluating precision recall and f1.
+
+#### Scikitlearn
+Lastly, we also created a maxent and laplace model using scikitlearn. These models were well optimized and far better able to classify data than our own models.
+F1 scores for both models are .999 or higher using English, French, German, and Italian on the LEPZIG corpus. 
+However, we were unable to figure out a way to use scikitlearn to classify for two classes which have no priority. I.e. if we
+have a sentence that is Spanish and English and we do not care if the system thinks Spanish or English is more likely as long as we identify both languages,
+we would need a system that is able to reflect that result. We were neither able to utilize scikit for predicting two most likely languages nor were we able
+to find a way to ignore the order of the class predictions. It may be the case that scikit learn or some other module could accomplish the results we needed. 
+We were unable to persue a good multiclass bilingual code switching maxent model because we were too busy procuring data. We were however very successful with creating
+various models using both modules and our own code to predict single language class. 
+
+No good corpus for code-switching multilngual sentences in the French, English, German, Spanish, Italian, and Dutch languages was found. Our analysis of
+twitter data was only partially successful due to limits to our free developer twitter api access as well as limits in resources for annotating and procuring data.
+
+#### To run our scikit learn laplace and maxent language classifiers, one must be in the folder "scikitLearnMaxentLaplace" and run the following command:
+python project_code.py
