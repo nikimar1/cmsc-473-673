@@ -65,7 +65,7 @@ To see the output, one can open the following file:
 englishTweetsInMadrid.jsonl
 
 #### Third attempt at generating a bilingual Spanish English corpus 
-###### (Note that I will be citing the papers I used for reference properly in the final project report.)
+##### (Note that I will be citing the papers I used for reference properly in the final project report.)
 
 I then consulted some prior research that looked at multilingual code switching. Code switching is defined as 
 the phenomenon by which multilingual speakers switch back and forth between their common languages in written or spoken communication.
@@ -111,25 +111,19 @@ Regardless, the data we extracted and later concatenated is available even if yo
 
 #### Processing data extracted by twurl
 
-###### For processing the bilingual data, we ran a commandline utility we created which will parse the two tables of cleaned data
-###### This generates a csv file of bilingual data after we manually input our decisions and parse our tweets. In better circumstances
-###### we now know that outsourcing a large body of Spanish twitter data for annotation of English Spanish bilingualism would have been more
-###### effective as a means of creating a corpora. Regardless, for our methods of generating a corpora consult the folder "forFindingBilingualSpanglish".
-###### Note before running our utility that in order to avoid overwriting the bilingual csv file we generated we recommend renaming the file
-###### currently named biList.csv before running our utility. 
+##### For processing the bilingual data, we ran a commandline utility we created which will parse the two tables of cleaned data. This generates a csv file of bilingual data after we manually input our decisions and parse our tweets. In better circumstances, we now know that outsourcing a large body of Spanish twitter data for annotation of English Spanish bilingualism would have been more effective as a means of creating a corpora. Regardless, for our methods of generating a corpora consult the folder "forFindingBilingualSpanglish".
+###### Note: before running our utility that in order to avoid overwriting the bilingual csv file we generated we recommend renaming the file currently named biList.csv before running our utility. 
 
 #### Bilingual classification attempt. 
 
-###### Due to lack of corpora and data, we simply attempted to classify a small dev set of spanglish tweets we ourselves generated.
-###### We did not have sufficient data to create training and test sets or sets for all languages and we therefore used the connlu universal dependency
-###### training sets for training our 6 languages, instead evaluating our own generated corpora as spanish english multiclasss or not.
-###### We may have erroneously annotated tweets although to the best of our knowledge our corpora is sound. We are not Spanish speakers.
+###### Due to lack of corpora and data, we simply attempted to classify a small dev set of spanglish tweets we ourselves generated. We did not have sufficient data to create training and test sets or sets for all languages and we therefore used the connlu universal dependency training sets for training our 6 languages, instead evaluating our own generated corpora as spanish english multiclasss or not.
+####### We may have erroneously annotated tweets although to the best of our knowledge our corpora is sound. We are not Spanish speakers.
 
-###### To run this classifier which is a backoff noisy channel classifier, run the following command 
-###### with input unigram and bigram backoff constants or nothing for a default:
+###### To run this classifier which is a backoff noisy channel classifier, run the following command with input unigram and bigram backoff constants or nothing for a default:
 write command later when I make the model
 
-###### This will generate precision recall and f1 scores after training our classifier model and then evaluating its top two language scores
-###### If this top two scores are Spanish and English in any order, it will output that multiclass but otherwise it will output other. 
-###### This is because of the limited devset and our ability to only test for this. Regardless, Spanish English bilingual or not will be the threshold
-###### for evaluating precision recall and f1.
+###### Mutliclass functionality
+This will generate precision recall and f1 scores after training our classifier model and then evaluating its top two language scores
+If the top two scores are Spanish and English in any order, it will output that multiclass but otherwise it will output other. 
+This is because of the limited devset and our ability to only test for this. Regardless, Spanish English bilingual or not will be the threshold
+for evaluating precision recall and f1.
