@@ -117,7 +117,7 @@ Regardless, the data we extracted and later concatenated is available even if yo
 #### Bilingual classification attempt. 
 
 ###### Due to lack of corpora and data, we simply attempted to classify a small dev set of spanglish tweets we ourselves generated. We did not have sufficient data to create training and test sets or sets for all languages and we therefore used the connlu universal dependency training sets for training our 6 languages, instead evaluating our own generated corpora as spanish english multiclasss or not.
-####### We may have erroneously annotated tweets although to the best of our knowledge our corpora is sound. We are not Spanish speakers.
+###### We may have erroneously annotated tweets although to the best of our knowledge our corpora is sound. We are not Spanish speakers.
 
 ###### To run this classifier which is a backoff noisy channel classifier, run the following command with input unigram and bigram backoff constants or nothing for a default:
 write command later when I make the model
