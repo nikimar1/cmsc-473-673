@@ -120,7 +120,29 @@ Regardless, the data we extracted and later concatenated is available even if yo
 ###### We may have erroneously annotated tweets although to the best of our knowledge our corpora is sound. We are not Spanish speakers.
 
 ###### To run this classifier which is a backoff noisy channel classifier, run the following command with input unigram and bigram backoff constants or nothing for a default:
-write command later when I make the model
+python "twitterBackoff.py" ./fr_gsd-ud-train.conllu ./en_ewt-ud-train.conllu ./de_gsd-ud-train.conllu ./es_gsd-ud-train.conllu ./it_isdt-ud-train.conllu ./nl_alpino-ud-train.conllu ./combinedCleaned.csv .5 .5  
+
+#### Feel free to use another csv file you generate yourself as our data was not the best. We got an f1 score of .425 but if one looks at the output of our code, the model was able to predict many of bilingual sentences only making mistakes with a 3 word sentence like "hat, sombrero, 'some url with a lot of garbage in it'. Another case where our model failed was a case where the only english word was no, noooo. With good data points like ['isabel472235', 'lmao', 'pues', 'ya', 'sabes', 'que', 'yo', 'si', 'se', 'de', 'musica', '', 'perrona', '', '', 'pues', 'ahi', 'me', 'dices', 'mas', 'so', 'we', 'can', 'buy', 'the', 'tickets'] which contained a long unambiguously bilingual sentence, our model had no trouble. Looking over sentences and what labels we generated in output it is easy to see that the issue is with data containing url's and other garbage despite our best attempts at cleaning as well as data having very short internet twitter sentences with some language ambiguity that even we as humans could not decide upon. We must also admit that some false classifications resulted form models working with latin based languages that have commonalities and are therefore showing false multiclass reuslts of spanish and french and so forth. That being said, this was a rare occurence. Our model methodology has potential if we perform better data extraction and procure enough data for good test training and dev sets. 
+
+#### Note, our data sets that you can use are as follows. 
+biList.csv was a dataset one of us chose while first extracting data. It was picked randomly but with a high degree of selectiveness for long sentences
+that we are certain are "Spanglish". These were high quality manually chosen tweets but there are only 7 of them.
+Our model was very good at picking out the two languages these tweets were written in getting only one false negative. 
+
+Data.csv was created by others using the utility we created for picking out sentences. However, there is an issue in that many sentences in said set 
+were actually purely Spanish but annotated by persons who were not familiar with Spanish and therefore chosen erroneously. 
+This was not the best quality dataset but it contains 76 entries which were found after looking over 1800 rows of our approximately 11500 tweets.
+This illustrates how difficult it was to create a corpora. 
+
+combinedCleaned.csv is a dataset that merges the two datasets above while also removing erroneous entries to the best of our group ability. However, this is still not
+a very high quality dataset because some sentences contain garbage url's or other things. We did not want to corrupt our results by manually editing data. This is the
+corpora which achieved .425 recall and precision (although to use recall and precision is redundant when one is looking at supposedly only true results)
+
+#### Csv file cleaning
+We have to note that the csv files genreated by our programs and cleaned up by the word segment utility ended up having many empty 
+spaces where emojis or other things were removed. We could easily have created a utility for removing any cases of more than one comma 
+in a row to fix this but we manually cleaned out the blanks from our csv files because they were frankly small datasets and did not warrant creating a tool for. 
+
 
 ###### Mutliclass functionality
 This will generate precision recall and f1 scores after training our classifier model and then evaluating its top two language scores
