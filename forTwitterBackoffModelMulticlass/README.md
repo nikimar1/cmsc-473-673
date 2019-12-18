@@ -15,3 +15,6 @@ This illustrates how difficult it was to create a corpora.
 combinedCleaned.csv is a dataset that merges the two datasets above while also removing erroneous entries to the best of our group ability. However, this is still not
 a very high quality dataset because some sentences contain garbage url's or other things. We did not want to corrupt our results by manually editing data. This is the
 corpora which achieved .425 recall and precision (although to use recall and precision is redundant when one is looking at supposedly only true results)
+
+#### To run our code with combinedCleaned.csv use the following (substitute csv file names or training connlu data as necessary):
+python "twitterBackoff.py" ./fr_gsd-ud-train.conllu ./en_ewt-ud-train.conllu ./de_gsd-ud-train.conllu ./es_gsd-ud-train.conllu ./it_isdt-ud-train.conllu ./nl_alpino-ud-train.conllu ./combinedCleaned.csv .5 .5  
