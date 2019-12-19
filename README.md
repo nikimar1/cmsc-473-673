@@ -24,6 +24,8 @@ python "backoff6lang.py" ./fr_gsd-ud-train.conllu ./en_ewt-ud-train.conllu ./de_
 ## For Twitter Data
 
 #### First attempt
+
+#### Note that due to git reset hard none of the code or data files for the first attempt are available although it was not very fruitful. I found 3 spanish tweets in a 5 km raidus in southern california. I found 0 French tweets in new york as per the geocode criteria I used. 
 At first, I attempted to search through the twitter api with queries based on geocode (location) and language. 
 I.e. looking for English tweets in Madrid in hopes they would be bilingual spanish and English. 
 I also looked for tweets in southern California that are in Spanish. This did not prove an effective method.
